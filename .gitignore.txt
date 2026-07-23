@@ -1,0 +1,7 @@
+# Clé API OpenAI (serveur uniquement — ne jamais exposer côté client)
+OPENAI_API_KEY=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
+NEXT_PUBLIC_SITE_URL=http://karte.adamkom.com
+
+# Supabase (base de données : cartes, leads, statistiques)
+NEXT_PUBLIC_SUPABASE_URL=https://wxxqiycnfojgxyrmnzuu.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind4eHFpeWNuZm9qZ3h5cm1uenV1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwNDY4OTgsImV4cCI6MjA5OTYyMjg5OH0.YGZch88qahgU0plstGOAbb2QSDZQfvU0pxvgPN61kD8
