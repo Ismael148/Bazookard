@@ -1,104 +1,121 @@
-Markdown
-# Bazookard — Phase 1
+Voici le contenu intégral du README prêt à copier-coller directement dans votre fichier `README.md` (avec des icônes, badges et séparateurs pour un rendu impeccable sur GitHub) :
 
-La plateforme de cartes de visite NFC propulsée par l'IA. Ce dépôt contient le **socle technique** : éditeur de carte par blocs, aperçu live, page publique (cible du tag NFC), QR code et export vCard.
+```markdown
+# 🚀 Bazookard — Phase 1
 
-> **Agent développeur** : Zo Lalaina Ismael RAJAOHARIMANANA  
-> **Statut** : Phase 1 fonctionne en **mode démo** (données dans le navigateur, `localStorage`). La base Supabase (auth + persistance) est déjà câblée et s'active en quelques minutes (voir plus bas). L'IA arrive en Phase 2.
+<p align="center">
+  <b>La plateforme de cartes de visite NFC propulsée par l'IA.</b><br>
+  Ce dépôt contient le <b>socle technique</b> : éditeur de carte par blocs, aperçu live, page publique (cible du tag NFC), QR code et export vCard.
+</p>
 
 ---
 
-## Démarrer en local
+👨‍💻 **Agent développeur** : **Zo Lalaina Ismael RAJAOHARIMANANA**  
+📌 **Statut** : La Phase 1 fonctionne en **mode démo** (données dans le navigateur via `localStorage`). La base Supabase (authentification + persistance) est câblée et s'active en quelques minutes. L'IA arrivera en Phase 2.
 
-Prérequis : **Node.js 18+**.
+---
+
+## ⚡ Démarrer en local
+
+> **Prérequis** : Node.js 18+
 
 ```bash
 cd Bazookard
 npm install
 npm run dev
-Ouvre http://localhost:3000
 
-/ — page d'accueil
+```
 
-/dashboard — tes cartes (crée, édite, supprime)
+Ouvrez **http://localhost:3000** dans votre navigateur :
 
-/editor/<id> — l'éditeur par blocs avec aperçu téléphone
+* `/` — Page d'accueil
+* `/dashboard` — Gestion de vos cartes (création, édition, suppression)
+* `/editor/<id>` — Éditeur par blocs avec aperçu mobile en direct
+* `/c/<slug>` — Page publique (ce que voit la personne qui scanne le tag NFC)
 
-/c/<slug> — la page publique (ce que voit la personne qui tape ton tag NFC)
-
-En mode démo, une carte d'exemple est créée automatiquement (/c/ismael).
-
-Comment ça marche
-Dans l'éditeur, tu ajoutes des blocs (Profil, Contact, Réseaux, Produits, FAQ, Chatbot…) — 24 blocs disponibles.
-
-L'aperçu téléphone se met à jour en direct.
-
-Tu publies : la carte est accessible à /c/<slug>.
-
-Tu écris cette URL sur un tag NFC avec une app gratuite (ex. NFC Tools). Au Tap, le téléphone ouvre la carte.
-
-La page publique propose Enregistrer le contact (vCard) et un QR code de secours.
-
-Passer en production (Supabase)
-Le mode démo stocke tout dans le navigateur. Pour de vrais comptes et une vraie base partagée :
-
-Crée un projet sur supabase.com.
-
-Dans SQL Editor, exécute le contenu de supabase/schema.sql (tables, sécurité RLS, création auto de profil).
-
-Copie .env.example vers .env.local et renseigne :
-
-Extrait de code
-NEXT_PUBLIC_SUPABASE_URL=...
-NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-NEXT_PUBLIC_SITE_URL=[https://ton-domaine.com](https://ton-domaine.com)
-Branche la couche données sur Supabase : src/lib/store.ts expose exactement les mêmes fonctions (listCards, getCard, saveCard…). Il suffit de remplacer leur corps par des appels Supabase (les clients sont prêts dans src/lib/supabase/).
-
-Note : ton hébergement LWS Starter sert au domaine et à la page de vente. L'app Next.js se déploie sur Vercel.
-
-Déployer sur Vercel
-Bash
-npm i -g vercel
-vercel
-Ou connecte le repo GitHub à Vercel (déploiement auto à chaque push). Ajoute les variables d'environnement Supabase dans le dashboard Vercel.
-
-Structure
-src/
-  app/
-    page.tsx              page d'accueil
-    dashboard/            liste des cartes
-    editor/[id]/          éditeur par blocs
-    c/[slug]/             page publique (cible NFC)
-  components/
-    Editor.tsx            éditeur + aperçu live
-    CardRenderer.tsx      rendu d'une carte (partagé éditeur + public)
-    PublicCard.tsx        page publique + QR + vCard
-  lib/
-    types.ts              types + thèmes
-    blocks.ts             catalogue des 24 blocs (schéma)
-    store.ts              couche données (démo localStorage)
-    supabase/             clients Supabase (prod)
-supabase/
-  schema.sql              schéma Postgres + RLS
-Ajouter un nouveau bloc = une entrée dans blocks.ts + un cas dans CardRenderer.tsx. L'éditeur génère le formulaire automatiquement.
-
-Prochaine étape — Phase 2 (IA)
-Générateur de carte par IA (décris ton activité → carte complète)
-
-Copywriting & branding IA sur chaque champ (boutons ✨ déjà présents)
-
-Chatbot IA fonctionnel sur la page publique (bloc déjà présent)
-
-Qualification & relance des leads par IA
-
-Voir ../Bazookard-Cahier-des-charges.md pour le détail.
-
+> 💡 *En mode démo, une carte d'exemple est générée automatiquement à l'adresse `/c/ismael`.*
 
 ---
 
-### Commandes pour envoyer le changement vers GitHub :
+## ⚙️ Comment ça marche ?
+
+1. **Création** : Dans l'éditeur, ajoutez vos éléments grâce à un catalogue de **24 blocs disponibles** (Profil, Contact, Réseaux, Produits, FAQ, Chatbot…).
+2. **Prévisualisation** : L'aperçu téléphone s'actualise en temps réel.
+3. **Publication** : Votre carte est en ligne sur `/c/<slug>`.
+4. **Programmation NFC** : Écrivez l'URL sur votre **tag NFC** via une application mobile (ex. *NFC Tools*). Un simple *Tap* ouvre instantanément la carte.
+5. **Fonctionnalités incluses** : La page publique propose le bouton **« Enregistrer le contact »** (fichier vCard) ainsi qu'un **QR code** de secours.
+
+---
+
+## 🗄️ Passer en production (Supabase)
+
+Le mode démo stocke les données localement. Pour activer le système multi-comptes et la persistance globale :
+
+1. Créez un projet sur [supabase.com](https://supabase.com).
+2. Dans le **SQL Editor**, exécutez le script [`supabase/schema.sql`](https://www.google.com/search?q=./supabase/schema.sql) (création des tables, règles de sécurité RLS, profils automatiques).
+3. Dupliquez `.env.example` en `.env.local` puis complétez :
+```env
+NEXT_PUBLIC_SUPABASE_URL=votre_url_supabase
+NEXT_PUBLIC_SUPABASE_ANON_KEY=votre_cle_anon
+NEXT_PUBLIC_SITE_URL=[https://votre-domaine.com](https://votre-domaine.com)
+
+```
+
+
+4. Activez Supabase dans l'application : `src/lib/store.ts` contient la structure prête (`listCards`, `getCard`, `saveCard`…). Il suffit de basculer leur exécution vers les clients prêts dans `src/lib/supabase/`.
+
+> ℹ️ *Note : L'hébergement LWS Starter gère le domaine et la page vitrine. L'application Next.js est destinée à être déployée sur Vercel.*
+
+---
+
+## 🌐 Déploiement sur Vercel
 
 ```bash
-git add README.md
-git commit -m "Mise à jour complète du README pour Bazookard"
-git push -u origin main
+npm i -g vercel
+vercel
+
+```
+
+*Ou connectez directement ce dépôt GitHub à votre compte Vercel pour bénéficier des déploiements automatiques à chaque commit. Pensez à renseigner les variables d'environnement Supabase dans les paramètres Vercel.*
+
+---
+
+## 📁 Structure du projet
+
+```text
+src/
+├── app/
+│   ├── page.tsx          # Page d'accueil
+│   ├── dashboard/        # Gestionnaire de cartes
+│   ├── editor/[id]/      # Éditeur par blocs
+│   └── c/[slug]/         # Page publique (cible NFC)
+├── components/
+│   ├── Editor.tsx        # Interface d'édition + aperçu live
+│   ├── CardRenderer.tsx  # Composant de rendu (partagé)
+│   └── PublicCard.tsx    # Rendu public + QR + vCard
+├── lib/
+│   ├── types.ts          # Définitions TypeScript + thèmes
+│   ├── blocks.ts         # Configuration des 24 blocs
+│   ├── store.ts          # Couche données (localStorage)
+│   └── supabase/         # Configuration des clients Supabase
+supabase/
+└── schema.sql            # Schéma PostgreSQL + RLS
+
+```
+
+> **Évolutivité** : Pour ajouter un bloc, il suffit de le déclarer dans `blocks.ts` et d'ajouter le rendu correspondant dans `CardRenderer.tsx`. L'interface d'édition s'adapte automatiquement.
+
+---
+
+## 🤖 Prochaine étape — Phase 2 (IA)
+
+* 🪄 **Générateur complet par IA** : Décrivez votre activité et obtenez une carte structurée.
+* ✍️ **Copywriting & Branding IA** : Assistance à la rédaction sur chaque champ (boutons ✨).
+* 💬 **Chatbot interactif** : Agent IA directement intégré sur la page publique.
+* 🎯 **Gestion des leads** : Qualification et relance automatique par IA.
+
+*(Consultez `../Bazookard-Cahier-des-charges.md` pour le détail des spécifications).*
+
+```
+
+```
