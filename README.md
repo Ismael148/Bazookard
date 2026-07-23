@@ -1,5 +1,3 @@
-Voici le contenu intégral du README prêt à copier-coller directement dans votre fichier `README.md` (avec des icônes, badges et séparateurs pour un rendu impeccable sur GitHub) :
-
 ```markdown
 # 🚀 Bazookard — Phase 1
 
