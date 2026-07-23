@@ -6,10 +6,10 @@ const display = Space_Grotesk({ variable: "--font-display", subsets: ["latin"] }
 const sans = Inter({ variable: "--font-sans", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Karte — Mini-apps NFC intelligentes",
+  title: "Bazookard — Mini-apps NFC intelligentes",
   description:
-    "Karte, by Adamkom & JJP : la mini-app NFC de ton commerce, propulsée par l'IA. Tap. Connect. Grow.",
-  icons: { icon: "/logo-karte.png", apple: "/logo-karte.png" },
+    "Bazookard, by Adamkom & JJP : la mini-app NFC de ton commerce, propulsée par l'IA. Tap. Connect. Grow.",
+  icons: { icon: "/logo-bazookard.png", apple: "/logo-bazookard.png" },
 };
 
 export default function RootLayout({

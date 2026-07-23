@@ -1,5 +1,5 @@
 "use client";
-// Couche de données unifiée Karte.
+// Couche de données unifiée Bazookard.
 // Supabase configuré (.env.local) → vraie base + auth.
 // Sinon → mode DÉMO localStorage (src/lib/store.ts). Même API partout.
 import { supabaseEnabled, createClient } from "./supabase/client";

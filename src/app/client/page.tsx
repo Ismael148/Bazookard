@@ -83,7 +83,7 @@ export default function ClientHome() {
               </div>
               <div style={{ padding: 18 }}>
                 <div style={{ color: "var(--muted)", fontSize: 12.5 }}>
-                  /c/{w.card?.slug ?? w.slug} {w.card ? `· ${w.card.blocks.length} blocs` : "· carte en préparation"}
+                  /{w.card?.slug ?? w.slug} {w.card ? `· ${w.card.blocks.length} blocs` : "· carte en préparation"}
                 </div>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 12 }}>
                   {PERM_BADGES.map((pb) => (

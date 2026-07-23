@@ -1,5 +1,5 @@
 "use client";
-// Tracking Karte : vues, taps, chat, leads — démo localStorage / Supabase analytics.
+// Tracking Bazookard : vues, taps, chat, leads — démo localStorage / Supabase analytics.
 import { supabaseEnabled, createClient } from "./supabase/client";
 
 export type StatEvent = "view" | "tap" | "chat" | "lead";

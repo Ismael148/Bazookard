@@ -1,4 +1,4 @@
-// Types partagés Karte (maj 2026-07-19)
+// Types partagés Bazookard (maj 2026-07-19)
 
 export type BlockType =
   | "profile" | "banner" | "avatar" | "headline" | "button" | "social"
@@ -6,7 +6,7 @@ export type BlockType =
   | "video" | "podcast" | "list" | "iframe" | "product" | "payment"
   | "subscribe" | "appointment" | "feedback" | "testimonial" | "chatbot"
   | "menu" | "offers" | "reviews" | "hours" | "wifi" | "events" | "loyalty" | "equipment" | "around"
-  | "reservation" | "form" | "rules";
+  | "reservation" | "form" | "rules" | "welcome";
 
 export interface Block {
   id: string;

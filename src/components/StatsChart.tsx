@@ -1,5 +1,5 @@
 "use client";
-// Graphiques analytics Karte — SVG pur, charte claire + jaune.
+// Graphiques analytics Bazookard — SVG pur, charte claire + jaune.
 import type { DayStats } from "@/lib/tracking";
 
 const YELLOW = "#FFD500";

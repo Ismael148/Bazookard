@@ -55,7 +55,7 @@ export default function Dashboard() {
       <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", borderBottom: "1px solid var(--line)", background: "#fff" }}>
         <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, fontWeight: 800, fontSize: 19, textDecoration: "none", color: "var(--txt)" }}>
           <span style={{ width: 30, height: 30, borderRadius: 8, background: "var(--accent)", color: "var(--accent-ink)", display: "grid", placeItems: "center" }}>⚡</span>
-          Karte
+          Bazookard
         </Link>
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={() => setPicking(true)} className="btn btn-primary">+ Nouvelle carte</button>
@@ -82,7 +82,7 @@ export default function Dashboard() {
                 <div style={{ height: 90, background: gradient(c.themeIndex) }} />
                 <div style={{ padding: 16 }}>
                   <div style={{ fontWeight: 700 }}>{c.title}</div>
-                  <div style={{ color: "var(--muted)", fontSize: 12, marginTop: 2 }}>/c/{c.slug} · {c.blocks.length} blocs · thème {CARD_THEMES[c.themeIndex]?.name ?? "—"}</div>
+                  <div style={{ color: "var(--muted)", fontSize: 12, marginTop: 2 }}>/{c.slug} · {c.blocks.length} blocs · thème {CARD_THEMES[c.themeIndex]?.name ?? "—"}</div>
                   {stats[c.id] && (
                     <div style={{ display: "flex", gap: 12, marginTop: 8, fontSize: 12, color: "var(--accent-deep)", fontWeight: 700 }}>
                       <span title="Vues de la carte">👁 {stats[c.id].view}</span>

@@ -1,5 +1,5 @@
 "use client";
-// Éditeur Karte v2 — 3 colonnes : blocs (gauche) · aperçu live (centre) · réglages (droite).
+// Éditeur Bazookard v2 — 3 colonnes : blocs (gauche) · aperçu live (centre) · réglages (droite).
 // Cliquer un bloc à gauche ouvre ses réglages à droite. Fluide, sans accordéons.
 import { useEffect, useState } from "react";
 import Link from "next/link";

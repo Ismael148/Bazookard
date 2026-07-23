@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 
 const ALLOWED = ["profile","banner","headline","button","social","contact","faq","gallery","list","product","subscribe","appointment","testimonial","chatbot","menu","offers","reviews","hours","wifi","events","loyalty","video"];
 
-const SYSTEM = `Tu es le générateur de cartes NFC de Karte. À partir de la description d'une activité, tu crées une mini-app complète en JSON STRICT (aucun texte hors JSON).
+const SYSTEM = `Tu es le générateur de cartes NFC de Bazookard. À partir de la description d'une activité, tu crées une mini-app complète en JSON STRICT (aucun texte hors JSON).
 
 Format de sortie :
 {"title":"Nom de l'activité","themeIndex":0-7,"blocks":[{"type":"...","data":{...}}]}

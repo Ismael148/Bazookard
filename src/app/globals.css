@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  /* Base CLAIRE Karte — le vert d'origine est définitivement supprimé */
+  /* Base CLAIRE Bazookard — le vert d'origine est définitivement supprimé */
   --bg: #FAFAF7;
   --panel: #FFFFFF;
   --panel2: #F4F2EA;
@@ -563,7 +563,7 @@ textarea.in { resize: vertical; min-height: 58px; }
 .lk-reveal.in { opacity: 1; transform: none; }
 
 /* =================================================================
-   LANDING V4 — structure « Nexora » en jaune Karte
+   LANDING V4 — structure « Nexora » en jaune Bazookard
    ================================================================= */
 /* Rail d'icônes vertical gauche */
 .lk-rail { position: fixed; left: 18px; top: 50%; transform: translateY(-50%); z-index: 55;
@@ -1049,7 +1049,7 @@ textarea.in { resize: vertical; min-height: 58px; }
 .lk7-report .area { opacity: 0; }
 .lk-reveal.in .lk7-report .area { animation: lk7AreaIn 1s ease 1.2s both; }
 @keyframes lk7AreaIn { to { opacity: 1; } }
-/* Comparatif : coche Karte en pastille */
+/* Comparatif : coche Bazookard en pastille */
 .lk7-comp .tick { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%;
   background: #FFD500; color: #171207; font-weight: 900; font-size: 14px; }
 
@@ -1277,3 +1277,77 @@ textarea.in { resize: vertical; min-height: 58px; }
 .ed-phone-scroll .kc-avatar-top { top: 58px !important; }
 .ed-phone-scroll .kc-hero { min-height: 330px; }
 .ed-phone-scroll .kc-hero-in { padding-top: 52px; }
+
+/* ===================================================================
+   PAGE DE VENTE — Storytelling immersif + offre unique 9€
+   =================================================================== */
+.lk7-story { position: relative; }
+.lk7-storygrid { display: grid; grid-template-columns: 1.55fr 1fr; gap: 28px; align-items: center; margin-top: 6px; }
+@media (max-width: 860px) { .lk7-storygrid { grid-template-columns: 1fr; } }
+.lk7-storytext p { font-size: 17px; line-height: 1.72; color: var(--ink2); margin: 0 0 15px; }
+.lk7-storytext b { color: var(--ink); }
+.lk7-storytext .hl { background: linear-gradient(180deg, transparent 62%, rgba(255,213,0,.55) 62%); font-weight: 700; color: var(--ink); }
+.lk7-turn { font-family: var(--font-display), serif; font-style: italic; font-size: 22px !important; line-height: 1.4 !important;
+  color: var(--ink) !important; font-weight: 600; margin-top: 22px !important; }
+.lk7-storycard { position: relative; background: linear-gradient(160deg, #17140C, #050505); color: #fff; border-radius: 24px;
+  padding: 30px 26px; overflow: hidden; box-shadow: 0 30px 70px -30px rgba(23,20,12,.6); }
+.lk7-storycard::before { content: ""; position: absolute; inset: 0; background: radial-gradient(120% 80% at 80% 0, rgba(255,213,0,.22), transparent 60%); }
+.lk7-storycard .tap { position: relative; font-size: 46px; margin-bottom: 14px; animation: lkTap 2.4s ease-in-out infinite; }
+@keyframes lkTap { 0%,100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-8px) rotate(2deg); } }
+.lk7-storycard .txt b { position: relative; display: block; font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+.lk7-storycard .txt span { position: relative; display: block; font-size: 14.5px; line-height: 1.6; color: rgba(255,255,255,.82); }
+.lk7-storyneed { display: flex; flex-wrap: wrap; gap: 9px; justify-content: center; margin-top: 34px; }
+.lk7-storyneed .chip { font-size: 13.5px; font-weight: 700; padding: 9px 16px; border-radius: 999px;
+  background: #fff; border: 1px solid var(--line); color: var(--ink2); box-shadow: 0 4px 14px -10px rgba(23,20,12,.3); }
+
+/* Offre unique centrée */
+.lk-solo { display: flex; justify-content: center; }
+.lk-solo-card { position: relative; width: 100%; max-width: 480px; background: #fff; border: 1px solid var(--line);
+  border-radius: 26px; padding: 34px 30px 28px; box-shadow: 0 40px 90px -40px rgba(23,20,12,.4), 0 0 0 4px rgba(255,213,0,.12);
+  text-align: center; }
+.lk-solo-card .lk-ribbon { position: absolute; top: -14px; left: 50%; transform: translateX(-50%); }
+.lk-solo-card .plan { font-weight: 800; font-size: 15px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin-top: 8px; }
+.lk-solo-card .amt { display: flex; align-items: baseline; justify-content: center; gap: 6px; margin: 8px 0 4px; }
+.lk-solo-card .amt .big { font-family: var(--font-display), sans-serif; font-size: 72px; font-weight: 800; line-height: 1; color: var(--ink);
+  background: linear-gradient(135deg, #17140C 40%, #E8A800); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.lk-solo-card .amt small { font-size: 18px; font-weight: 700; color: var(--ink2); }
+.lk-solo-card .sub { font-size: 13.5px; color: var(--muted); margin-bottom: 18px; }
+.lk-solo-card ul { list-style: none; padding: 0; margin: 0; text-align: left; display: flex; flex-direction: column; gap: 10px; }
+.lk-solo-card ul li { position: relative; padding-left: 30px; font-size: 14.5px; line-height: 1.45; color: var(--ink); font-weight: 500; }
+.lk-solo-card ul li::before { content: "✓"; position: absolute; left: 0; top: -1px; width: 21px; height: 21px; border-radius: 50%;
+  background: #FFD500; color: #17140C; font-size: 12px; font-weight: 900; display: grid; place-items: center; }
+.lk-solo-note { font-size: 12px; color: var(--muted); margin-top: 14px; line-height: 1.5; }
+
+/* ===================================================================
+   BLOC LIVRET D'ACCUEIL (gîtes / Airbnb / villas)
+   =================================================================== */
+.kc-welcome-intro { font-size: 13px; color: var(--c-soft); line-height: 1.5; margin-bottom: 12px; }
+.kc-welcome-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+.kc-welcome-tile { display: flex; align-items: center; gap: 11px; padding: 13px 14px; border-radius: 16px;
+  background: var(--c-bg); border: 1px solid var(--c-line); cursor: pointer; text-align: left; font-family: inherit;
+  color: var(--c-ink); transition: transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s, border-color .18s;
+  animation: kcAFade .45s ease both; }
+.kc-welcome-tile:hover { transform: translateY(-2px); border-color: var(--c-accent);
+  box-shadow: 0 10px 22px -12px color-mix(in srgb, var(--c-accent) 60%, transparent); }
+.kc-welcome-tile:active { transform: scale(.97); }
+.kc-welcome-tile .ic { font-size: 22px; line-height: 1; flex-shrink: 0; }
+.kc-welcome-tile .lb { flex: 1; font-size: 13.5px; font-weight: 700; line-height: 1.2; }
+.kc-welcome-tile .ar { font-size: 20px; color: var(--c-soft); font-weight: 400; }
+
+.kc-welcome-modal { position: absolute; inset: 0; z-index: 60; display: flex; align-items: flex-end; justify-content: center;
+  background: rgba(8,8,10,.55); backdrop-filter: blur(3px); animation: kcAFade .2s ease both; padding: 0; }
+.kc-welcome-modal .sheet { position: relative; width: 100%; max-height: 88%; overflow-y: auto; background: var(--c-surface);
+  border-radius: 26px 26px 0 0; padding: 22px 20px 26px; box-shadow: 0 -20px 60px -20px rgba(0,0,0,.5);
+  animation: kcSheetUp .34s cubic-bezier(.16,1,.3,1) both; scrollbar-width: none; }
+.kc-welcome-modal .sheet::-webkit-scrollbar { display: none; }
+@keyframes kcSheetUp { from { transform: translateY(100%); } to { transform: none; } }
+.kc-welcome-modal .sheet::before { content: ""; position: absolute; top: 9px; left: 50%; transform: translateX(-50%);
+  width: 42px; height: 5px; border-radius: 999px; background: var(--c-line); }
+.kc-welcome-modal .close { position: absolute; top: 16px; right: 16px; width: 30px; height: 30px; border-radius: 50%;
+  border: none; background: var(--c-bg); color: var(--c-ink); font-size: 14px; cursor: pointer; z-index: 2; }
+.kc-welcome-modal .hd { display: flex; align-items: center; gap: 11px; margin: 12px 0 14px; }
+.kc-welcome-modal .hd .ic { font-size: 30px; }
+.kc-welcome-modal .hd b { font-family: var(--font-display), sans-serif; font-size: 20px; font-weight: 700; }
+.kc-welcome-modal .vid { width: 100%; aspect-ratio: 16/9; border: none; border-radius: 16px; display: block; margin-bottom: 14px; }
+.kc-welcome-modal .img { width: 100%; height: auto; border-radius: 16px; display: block; margin-bottom: 14px; }
+.kc-welcome-modal .desc { font-size: 14.5px; line-height: 1.62; color: var(--c-ink); white-space: pre-line; }

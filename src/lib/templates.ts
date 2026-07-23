@@ -1,4 +1,4 @@
-// Templates de cartes Karte — blocs pré-remplis par niche.
+// Templates de cartes Bazookard — blocs pré-remplis par niche.
 // Un template = thème + liste de blocs (sans id ; ids générés à l'instanciation).
 import type { Block, BlockType } from "./types";
 
@@ -324,6 +324,107 @@ export const TEMPLATES: CardTemplate[] = [
       { type: "contact", data: { phone: "+33600000000", email: "hello@alexmartin.design", whatsapp: "", wamsg: "", maps: "", website: "https://alexmartin.design" } },
       { type: "social", data: { items: [{ network: "linkedin", url: "https://linkedin.com" }, { network: "x", url: "https://x.com" }, { network: "instagram", url: "https://instagram.com" }] } },
       { type: "chatbot", data: { greeting: "Bonjour 👋 Un projet en tête ? Décrivez-le-moi, je vous dis comment je peux aider." } },
+    ],
+  },
+  /* ========== 9. PLOMBIER / ARTISAN BTP (dépannage) ========== */
+  {
+    id: "tpl-plombier",
+    name: "AquaPro Dépannage",
+    niche: "Plombier / Artisan",
+    emoji: "🔧",
+    themeIndex: 1, // Océan — bleu pro, fond clair premium
+    description: "Dépannage express, devis WhatsApp, avis clients, zones d'intervention. La carte du bon artisan.",
+    blocks: [
+      { type: "profile", data: { name: "AquaPro", title: "Plomberie · Chauffage · Dépannage", company: "Intervention 7j/7 · 30 km", photo: "", bio: "Artisan plombier certifié. Fuite, chauffe-eau, débouchage : j'interviens vite et proprement." } },
+      { type: "button", data: { label: "🚨 Urgence — appelez maintenant", url: "tel:+262693802201" } },
+      { type: "contact", data: { phone: "+262693802201", email: "contact@aquapro.re", whatsapp: "262693802201", wamsg: "Bonjour, j'ai besoin d'un dépannage plomberie.", address: "Saint-Denis, La Réunion", website: "", savebtn: true } },
+      { type: "list", data: { title: "🛠️ Nos prestations", style: "accordeon", items: [
+        { label: "Recherche & réparation de fuite", value: "Détection sans casse, réparation immédiate." },
+        { label: "Chauffe-eau & ballon", value: "Installation, détartrage, remplacement toutes marques." },
+        { label: "Débouchage canalisation", value: "Haute pression, caméra d'inspection." },
+        { label: "Rénovation salle de bain", value: "Devis gratuit sous 48h." },
+      ] } },
+      { type: "headline", data: { title: "✅ Pourquoi nous choisir", text: "Devis gratuit et transparent · Déplacement sous 1h en urgence · Travail garanti · Artisan assuré décennale." } },
+      { type: "hours", data: { title: "🕒 Disponibilités", style: "pills", items: [
+        { day: "Lun–Ven", hours: "07:00 - 19:00" },
+        { day: "Samedi", hours: "08:00 - 17:00" },
+        { day: "Dimanche", hours: "Urgences uniquement" },
+      ] } },
+      { type: "reviews", data: { title: "⭐ Ils nous recommandent", style: "boutons", text: "Votre avis nous aide à grandir.", items: [{ platform: "google", url: "" }] } },
+      { type: "form", data: { title: "Demander un devis gratuit", note: "Décrivez votre besoin, on vous rappelle sous 2h.", askPhone: true } },
+      { type: "chatbot", data: { greeting: "Bonjour 👋 Une fuite, un chauffe-eau en panne ? Dites-moi tout, je vous oriente tout de suite.", knowledge: "Plombier chauffagiste. Intervention 7j/7 sur 30 km. Devis gratuit. Urgences sous 1h." } },
+    ],
+  },
+  /* ========== 10. GARAGE / AUTO ========== */
+  {
+    id: "tpl-garage",
+    name: "Garage Vitesse",
+    niche: "Garage / Auto",
+    emoji: "🚗",
+    themeIndex: 5, // Nuit — sombre premium, esprit auto
+    description: "Entretien, réparation, prise de RDV et avis : la carte moderne du garagiste.",
+    blocks: [
+      { type: "banner", data: { image: U("photo-1486262715619-67b85e0b08d3") } },
+      { type: "profile", data: { name: "Garage Vitesse", title: "Mécanique · Carrosserie · Pneus", company: "Le Port · La Réunion", photo: "", bio: "Votre auto entre de bonnes mains. Diagnostic honnête, devis clair, délais tenus." } },
+      { type: "contact", data: { phone: "+262693000000", email: "contact@garagevitesse.re", whatsapp: "262693000000", wamsg: "Bonjour, je souhaite un rendez-vous atelier.", address: "Le Port, La Réunion", website: "", savebtn: true } },
+      { type: "product", data: { items: [
+        { title: "Vidange + filtres", price: "dès 89€", image: U("photo-1487754180451-c456f719a1fc"), url: "" },
+        { title: "Révision complète", price: "dès 149€", image: U("photo-1503376780353-7e6692767b70"), url: "" },
+        { title: "Pneus montés / équilibrés", price: "dès 45€", image: U("photo-1449965408869-eaa3f722e40d"), url: "" },
+        { title: "Diagnostic électronique", price: "39€", image: U("photo-1492144534655-ae79c964c9d7"), url: "" },
+      ] } },
+      { type: "list", data: { title: "🔧 Nos services", style: "accordeon", items: [
+        { label: "Mécanique générale", value: "Distribution, embrayage, freins, suspension." },
+        { label: "Carrosserie & peinture", value: "Débosselage, rénovation, prise en charge assurance." },
+        { label: "Climatisation", value: "Recharge et diagnostic fuite." },
+        { label: "Contrôle technique", value: "Pré-contrôle et contre-visite." },
+      ] } },
+      { type: "hours", data: { title: "🕒 Horaires atelier", style: "timeline", items: [
+        { day: "Lundi", hours: "08:00 - 17:30" },
+        { day: "Mardi", hours: "08:00 - 17:30" },
+        { day: "Mercredi", hours: "08:00 - 17:30" },
+        { day: "Jeudi", hours: "08:00 - 17:30" },
+        { day: "Vendredi", hours: "08:00 - 17:00" },
+        { day: "Samedi", hours: "08:30 - 12:00" },
+        { day: "Dimanche", hours: "Fermé" },
+      ] } },
+      { type: "appointment", data: { title: "📅 Prendre rendez-vous", url: "" } },
+      { type: "reviews", data: { title: "⭐ Avis clients", style: "boutons", text: "Merci pour votre confiance !", items: [{ platform: "google", url: "" }] } },
+      { type: "chatbot", data: { greeting: "Bonjour 👋 Un bruit suspect, une révision à prévoir ? Dites-moi le modèle et le souci.", knowledge: "Garage automobile : mécanique, carrosserie, pneus, clim, pré-contrôle technique. RDV en ligne." } },
+    ],
+  },
+  /* ========== 11. VILLA DE LUXE / CONCIERGERIE (livret d'accueil complet) ========== */
+  {
+    id: "tpl-villa",
+    name: "Villa Prestige",
+    niche: "Villa de luxe / Conciergerie",
+    emoji: "🏝️",
+    themeIndex: 3, // Émeraude — fond clair, esprit exotique premium
+    description: "Le livret d'accueil digital haut de gamme : rubriques cliquables, vidéos, équipements, alentours.",
+    blocks: [
+      { type: "banner", data: { image: U("photo-1613490493576-7fde63acd811") } },
+      { type: "profile", data: { name: "Villa Prestige", title: "Villa de luxe · 5 chambres · Piscine", company: "Saint-Gilles · La Réunion", photo: "", bio: "Bienvenue dans votre villa. Tout le nécessaire de votre séjour est réuni ici, en un clin d'œil." } },
+      { type: "welcome", data: { title: "📖 Livret d'accueil", intro: "Cliquez sur une rubrique pour tout savoir sur votre séjour.", items: [
+        { icon: "📶", label: "Wi-Fi", desc: "Réseau : VillaPrestige\nMot de passe : Lagon974\nDisponible dans toute la villa et autour de la piscine.", image: "", video: "" },
+        { icon: "🅿️", label: "Parking & accès PMR", desc: "2 places privées devant la villa. Accès de plain-pied, adapté aux personnes à mobilité réduite. Portail automatique (télécommande dans l'entrée).", image: "", video: "" },
+        { icon: "📺", label: "TV · Netflix · Canal+", desc: "Smart TV 65\" avec Netflix, Canal+ et YouTube déjà connectés. Enceinte Bluetooth dans le salon.", image: "", video: "" },
+        { icon: "🏊", label: "Piscine & extérieur", desc: "Piscine à débordement chauffée, accessible de 8h à 21h. Transats, parasols et douche extérieure. Barbecue sur la terrasse.", image: "", video: "" },
+        { icon: "🔑", label: "Arrivée & départ", desc: "Arrivée autonome dès 16h (boîte à clés, code envoyé la veille). Départ jusqu'à 11h.", image: "", video: "" },
+        { icon: "🧺", label: "Ménage & linge", desc: "Ménage de fin de séjour inclus. Linge de lit et serviettes fournis. Lave-linge et sèche-linge dans la buanderie.", image: "", video: "" },
+        { icon: "🌡️", label: "Climatisation", desc: "Clim réversible dans chaque chambre. Merci d'éteindre en quittant la villa.", image: "", video: "" },
+        { icon: "🚨", label: "Urgences & conciergerie", desc: "SAMU 15 · Pompiers 18 · 112.\nConciergerie 24/7 : +262 6 93 80 22 01 (WhatsApp).", image: "", video: "" },
+      ] } },
+      { type: "equipment", data: { title: "🛎️ Équipements" } },
+      { type: "rules", data: { title: "📋 Règles de la maison" } },
+      { type: "around", data: { title: "🗺️ Aux alentours", items: [
+        { image: U("photo-1507525428034-b723cf961d3e"), name: "Plage de l'Ermitage", desc: "Lagon turquoise, snorkeling", distance: "5 min", cat: "Plages" },
+        { image: U("photo-1414235077428-338989a2e8c0"), name: "Restaurants du front de mer", desc: "Cuisine créole & poissons", distance: "7 min", cat: "Restaurants et cafés" },
+        { image: U("photo-1433086966358-54859d0ed716"), name: "Cascade Langevin", desc: "Nature spectaculaire", distance: "40 min", cat: "Environnement naturel" },
+        { image: U("photo-1436491865332-7a61a109cc05"), name: "Aéroport Roland Garros", desc: "Vols internationaux", distance: "55 min", cat: "Aéroports les plus proches" },
+      ] } },
+      { type: "reservation", data: { title: "Prolonger / réserver à nouveau", note: "Envie de revenir ? Écrivez-nous.", whatsapp: "262693802201", askPeople: true } },
+      { type: "reviews", data: { title: "⭐ Votre avis compte", style: "tuiles", text: "Un avis nous aide énormément. Merci !", items: [{ platform: "airbnb", url: "" }, { platform: "google", url: "" }] } },
+      { type: "chatbot", data: { greeting: "Bonjour 👋 Je suis votre conciergerie virtuelle. Wi-Fi, équipements, bonnes adresses : demandez-moi !", knowledge: "Villa de luxe 5 chambres à Saint-Gilles. Piscine chauffée, ménage inclus, accès PMR. Arrivée 16h, départ 11h." } },
     ],
   },
 ];

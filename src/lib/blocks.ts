@@ -1,4 +1,4 @@
-// Catalogue des blocs Karte (schéma piloté par les données)
+// Catalogue des blocs Bazookard (schéma piloté par les données)
 import type { BlockType } from "./types";
 
 export type FieldType = "text" | "textarea" | "url" | "tel" | "email" | "image" | "toggle" | "select" | "repeater";
@@ -426,6 +426,37 @@ export const BLOCK_DEFS: BlockDef[] = [
         item: [
           { key: "day", label: "Jour", type: "text" },
           { key: "hours", label: "Horaires (ou « Fermé »)", type: "text", placeholder: "09:00 - 18:00" },
+        ],
+      },
+    ],
+  },
+  {
+    type: "welcome", name: "Livret d'accueil", icon: "📖", category: "Contenu",
+    defaults: {
+      title: "Livret d'accueil",
+      intro: "Toutes les infos de votre séjour en un clin d'œil. Cliquez sur une rubrique.",
+      items: [
+        { icon: "📶", label: "Wi-Fi", desc: "Réseau : Villa_Cap\nMot de passe : Bienvenue974\nConnexion disponible dans toute la maison et sur la terrasse.", image: "", video: "" },
+        { icon: "🅿️", label: "Parking", desc: "Place privée gratuite devant la maison. Accès de plain-pied, adapté aux personnes à mobilité réduite (PMR). Portail automatique, télécommande sur le meuble d'entrée.", image: "", video: "" },
+        { icon: "📺", label: "TV & Netflix", desc: "Smart TV avec Netflix, YouTube et Canal+ inclus. Connectez votre propre compte ou utilisez le nôtre (déjà connecté). Télécommande sur la table basse.", image: "", video: "" },
+        { icon: "🔑", label: "Arrivée & départ", desc: "Arrivée autonome à partir de 15h (boîte à clés, code communiqué la veille). Départ jusqu'à 11h. Merci de laisser les clés dans la boîte.", image: "", video: "" },
+        { icon: "🗑️", label: "Tri & poubelles", desc: "Ordures ménagères : bac vert, ramassage le mardi et vendredi. Tri sélectif : bac jaune. Local poubelles à gauche du portail.", image: "", video: "" },
+        { icon: "🌡️", label: "Climatisation", desc: "Climatiseurs dans chaque chambre. Télécommande murale. Merci d'éteindre en quittant la maison pour économiser l'énergie.", image: "", video: "" },
+        { icon: "🏊", label: "Piscine", desc: "Piscine accessible de 8h à 20h. Douche obligatoire avant baignade. Surveillez les enfants, la piscine n'est pas sécurisée.", image: "", video: "" },
+        { icon: "🚨", label: "Urgences & contacts", desc: "SAMU 15 · Police 17 · Pompiers 18 · Numéro européen 112.\nPropriétaire : +262 6 93 80 22 01 (appel ou WhatsApp).", image: "", video: "" },
+      ],
+    },
+    fields: [
+      { key: "title", label: "Titre", type: "text" },
+      { key: "intro", label: "Texte d'introduction", type: "textarea" },
+      {
+        key: "items", label: "Rubriques du livret", type: "repeater", addLabel: "+ Ajouter une rubrique", ai: true,
+        item: [
+          { key: "icon", label: "Icône (emoji)", type: "text", placeholder: "📶" },
+          { key: "label", label: "Titre de la rubrique", type: "text", placeholder: "Wi-Fi" },
+          { key: "desc", label: "Description (s'affiche au clic)", type: "textarea" },
+          { key: "image", label: "Photo (optionnel)", type: "image" },
+          { key: "video", label: "Vidéo explicative (YouTube/Vimeo, optionnel)", type: "url" },
         ],
       },
     ],

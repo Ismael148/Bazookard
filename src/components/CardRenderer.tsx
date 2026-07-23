@@ -1,4 +1,4 @@
-// Rendu présentationnel d'une carte Karte v2 — mini-app immersive.
+// Rendu présentationnel d'une carte Bazookard v2 — mini-app immersive.
 // Pur composant (aucun hook) => utilisable côté éditeur ET en SSR sur la page publique.
 // Les handlers (vCard, chat) sont optionnels : absents dans l'aperçu éditeur.
 import type { Card, Block } from "@/lib/types";
@@ -7,6 +7,7 @@ import LoyaltyCard from "./LoyaltyCard";
 import SocialIcon, { Glyph } from "./SocialIcon";
 import MenuBlock from "./MenuBlock";
 import AroundBlock from "./AroundBlock";
+import WelcomeBlock from "./WelcomeBlock";
 import SubscribeBlock from "./SubscribeBlock";
 import ReservationBlock from "./ReservationBlock";
 import FormBlock from "./FormBlock";
@@ -643,6 +644,8 @@ function renderBlock(block: Block, cardId: string, custom?: Card["custom"]): Rea
     }
     case "around":
       return <AroundBlock data={d} fmt={bf || (shape === "original" ? "original" : "")} />;
+    case "welcome":
+      return <WelcomeBlock data={d} />;
     case "rules": {
       const items = arr(d.items).filter((i) => s(i.name));
       return (

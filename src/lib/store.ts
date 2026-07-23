@@ -1,5 +1,5 @@
 "use client";
-// Couche de données Karte — mode DÉMO (localStorage).
+// Couche de données Bazookard — mode DÉMO (localStorage).
 // En production, ces fonctions seront remplacées par des appels Supabase
 // (voir supabase/schema.sql et src/lib/supabase/*). L'API publique reste identique.
 
@@ -97,11 +97,11 @@ export function deleteCard(id: string) {
 function demoCard(): Card {
   const profile = newBlock("profile");
   profile.data = {
-    name: "Ismael Z.", title: "Fondateur", company: "Karte",
+    name: "Ismael Z.", title: "Fondateur", company: "Bazookard",
     photo: "", bio: "La carte de visite NFC la plus intelligente du marché. Tapez pour me sauvegarder.",
   };
   const contact = newBlock("contact");
-  contact.data = { phone: "+33600000000", email: "hello@karte.app", whatsapp: "33600000000", wamsg: "Bonjour Ismael !", maps: "", website: "https://karte.app" };
+  contact.data = { phone: "+33600000000", email: "hello@bazookard.adamkom.com", whatsapp: "33600000000", wamsg: "Bonjour Ismael !", maps: "", website: "https://bazookard.adamkom.com" };
   const social = newBlock("social");
   const chatbot = newBlock("chatbot");
   return {

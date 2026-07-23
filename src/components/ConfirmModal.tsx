@@ -1,5 +1,5 @@
 "use client";
-// Popup de confirmation Karte — remplace les confirm() natifs partout.
+// Popup de confirmation Bazookard — remplace les confirm() natifs partout.
 export default function ConfirmModal({ message, confirmLabel = "Supprimer", onConfirm, onCancel, dark = false }: {
   message: string; confirmLabel?: string; onConfirm: () => void; onCancel: () => void; dark?: boolean;
 }) {

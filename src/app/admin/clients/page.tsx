@@ -79,8 +79,8 @@ export default function ClientsPage() {
                   <td style={{ color: "var(--muted)", fontSize: 13 }}>{new Date(c.createdAt).toLocaleDateString("fr-FR")}</td>
                   <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
                     <a className="a-btn a-btn-sm a-btn-primary" style={{ marginRight: 6 }}
-                      href={`mailto:${c.email}?subject=${encodeURIComponent("Vos accès Karte — " + c.company)}&body=${encodeURIComponent(
-                        `Bonjour,\n\nVotre espace Karte est prêt ! Vous pouvez modifier votre carte NFC à tout moment :\n\nLien : ${typeof window !== "undefined" ? window.location.origin : ""}/client/login\nEmail : ${c.email}\nMot de passe : ${c.password}\n\nÀ très vite,\nL'équipe Karte — by Adamkom & JJP`
+                      href={`mailto:${c.email}?subject=${encodeURIComponent("Vos accès Bazookard — " + c.company)}&body=${encodeURIComponent(
+                        `Bonjour,\n\nVotre espace Bazookard est prêt ! Vous pouvez modifier votre carte NFC à tout moment :\n\nLien : ${typeof window !== "undefined" ? window.location.origin : ""}/client/login\nEmail : ${c.email}\nMot de passe : ${c.password}\n\nÀ très vite,\nL'équipe Bazookard — by Adamkom & JJP`
                       )}`}
                       title="Envoyer les accès par email">
                       <Icon name="export" size={14} /> Envoyer les accès

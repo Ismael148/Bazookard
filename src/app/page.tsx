@@ -1,5 +1,5 @@
 "use client";
-// Page de vente Karte V7 — éditorial épuré (blanc / jaune / noir).
+// Page de vente Bazookard V7 — éditorial épuré (blanc / jaune / noir).
 // Référence : landing "Enblox" — gros titres, touches serif italiques,
 // téléphone sur dégradé flou, sections informatives complètes.
 import { useEffect, useMemo, useRef } from "react";
@@ -70,17 +70,27 @@ const MODULES = [
   "Hébergement rapide + lien personnalisé",
 ];
 
-const PRICES = [
-  { plan: "1 carte", amt: "27", per: "/mois", feat: false,
-    feats: ["1 carte NFC / mini-app", "Tous les blocs + templates", "QR + vCard + statistiques", "Support par WhatsApp"] },
-  { plan: "10 cartes", amt: "56", per: "/mois", feat: true,
-    feats: ["10 cartes NFC / mini-apps", "Support client illimité", "Gestion de votre fiche Google (GMB)", "2 posts ultra-modernes / mois (Facebook + Instagram)", "1 vidéo ultra-premium offerte chaque mois", "Un influenceur dédié à votre marque", "Inscription à l'annuaire n°1 de La Réunion (450+ entreprises)"] },
-  { plan: "+10 cartes", amt: "127", per: "/mois · à partir de", feat: false,
-    feats: ["Cartes illimitées sur devis", "Comptes clients + permissions", "Marque blanche", "Accompagnement dédié"] },
-];
+const OFFER = {
+  amt: "9",
+  per: "€ / mois",
+  sub: "Tout inclus. Sans engagement. Résiliable à tout moment.",
+  feats: [
+    "Carte NFC + mini-app 100 % personnalisable",
+    "Tous les blocs premium + tous les templates",
+    "Chatbot IA assistant qui répond à vos clients 24/7",
+    "Carte de fidélité à tampons digitale",
+    "Statistiques & performances en temps réel",
+    "Réservations, formulaires & capture de contacts",
+    "Menu, horaires, offres, avis, événements, wifi…",
+    "QR code + vCard + lien personnalisé",
+    "1 vidéo ultra-performante offerte chaque mois",
+    "Mises à jour illimitées + hébergement rapide",
+    "Support par WhatsApp, en direct",
+  ],
+};
 
 const FAQ = [
-  { q: "Comment fonctionne le tag NFC ?", a: "Un tag NFC contient simplement l'adresse de votre carte Karte. Vos clients approchent leur téléphone, la carte s'ouvre instantanément — aucune application à installer, compatible iPhone et Android." },
+  { q: "Comment fonctionne le tag NFC ?", a: "Un tag NFC contient simplement l'adresse de votre carte Bazookard. Vos clients approchent leur téléphone, la carte s'ouvre instantanément — aucune application à installer, compatible iPhone et Android." },
   { q: "Qu'est-ce que ça change concrètement pour mon activité ?", a: "Vos clients trouvent tout au même endroit (menu, horaires, réservation, avis) et vous récupérez leurs contacts à chaque interaction. Résultat : plus de réservations, plus d'avis Google, plus de clients qui reviennent — et zéro réimpression." },
   { q: "L'abonnement, ça couvre quoi ?", a: "Tout : hébergement, mises à jour illimitées, chatbot IA, statistiques et support WhatsApp. Le plan 10 cartes ajoute la gestion de votre fiche Google, 2 posts par mois et l'annuaire n°1 de La Réunion." },
   { q: "Comment fonctionne la carte de fidélité sans application ?", a: "Le client active sa carte directement sur votre page NFC. À chaque visite, vous validez le tampon avec votre code commerçant. Carte pleine = récompense automatique. Ses tampons sont conservés sur son téléphone." },
@@ -149,7 +159,7 @@ export default function Home() {
           <span className="ln">Tout votre <span className="hl lk7-it">univers.</span></span>
         </h1>
         <p className="lk7-sub">
-          Menu, réservations, fidélité, avis, chatbot IA : la carte NFC Karte transforme
+          Menu, réservations, fidélité, avis, chatbot IA : la carte NFC Bazookard transforme
           chaque rencontre en client — sans application, sans réimpression.
         </p>
         <div className="lk7-heroctas">
@@ -182,11 +192,39 @@ export default function Home() {
         </div>
       </div>
 
+      {/* ===== HISTOIRE / STORYTELLING ===== */}
+      <section className="lk7-sec lk7-story">
+        <div className="lk-sechead lk-reveal" style={{ marginBottom: 30 }}>
+          <span className="lk-eye">L&apos;histoire</span>
+          <h2 className="lk-h2-line">Chaque jour, un client vous file entre les doigts.</h2>
+        </div>
+        <div className="lk7-storygrid">
+          <div className="lk7-storytext lk-reveal">
+            <p><b>18h47.</b> Un client vient de repartir. Il a adoré. Il a pris une carte de visite, un flyer, noté un numéro sur son téléphone. Puis la vie a repris le dessus.</p>
+            <p>Le plombier qu&apos;on ne retrouve plus quand la fuite revient. Le resto « super sympa » dont on a oublié le nom. Le gîte parfait… mais l&apos;adresse du Wi-Fi, les horaires du ménage, le code du parking ? Envolés. Le garage, l&apos;électricien, l&apos;institut : tous vivent le même drame silencieux — <span className="hl">des clients conquis, puis perdus faute d&apos;un lien qui reste.</span></p>
+            <p>Le problème n&apos;a jamais été la qualité de votre travail. C&apos;est qu&apos;<b>entre vous et votre client, il n&apos;y a rien qui dure.</b> Un bout de papier finit à la poubelle. Un numéro se perd. Une belle rencontre s&apos;évapore.</p>
+            <p className="lk7-turn">Et si, d&apos;un seul geste, tout ce que vous êtes restait pour toujours dans la poche de vos clients ?</p>
+          </div>
+          <div className="lk7-storycard lk-reveal rr">
+            <div className="tap">👆</div>
+            <div className="txt">
+              <b>Un tap. C&apos;est tout.</b>
+              <span>Le client approche son téléphone de votre carte Bazookard. Votre univers s&apos;ouvre : contact enregistré, réservation prise, fidélité activée. Il ne vous oubliera plus.</span>
+            </div>
+          </div>
+        </div>
+        <div className="lk7-storyneed">
+          {["Plombiers &amp; artisans", "Restaurants &amp; cafés", "Gîtes · Airbnb · villas", "Garages &amp; auto", "Instituts &amp; salons", "Électriciens", "Commerces", "Indépendants"].map((n) => (
+            <span key={n} className="chip" dangerouslySetInnerHTML={{ __html: n }} />
+          ))}
+        </div>
+      </section>
+
       {/* ===== AVANTAGES ===== */}
       <section className="lk7-sec" id="avantages">
         <div className="lk7-split">
-          <h2 className="lk7-h2 lk-reveal rl">Plus de clients. Moins d&apos;efforts. <span className="hl lk7-it">C&apos;est tout l&apos;idée.</span></h2>
-          <p className="lk-reveal rr d1">Karte n&apos;est pas une carte de visite. C&apos;est votre brochure, votre menu, votre carte de fidélité et votre standard téléphonique — réunis dans un seul lien, toujours à jour.</p>
+          <h2 className="lk7-h2 lk-reveal rl">La solution&nbsp;: <span className="hl lk7-it">un lien qui ne se perd jamais.</span></h2>
+          <p className="lk-reveal rr d1">Bazookard n&apos;est pas une carte de visite. C&apos;est votre brochure, votre menu, votre carte de fidélité et votre standard téléphonique — réunis dans un seul lien, toujours à jour.</p>
         </div>
         <div className="lk7-bene">
           <div className="lk7-bcard lk-reveal rz">
@@ -368,7 +406,7 @@ export default function Home() {
               <div className="bd">
                 <div>
                   <b>{t.emoji} {t.name}</b>
-                  <small>{t.niche} · dès 27€/mois</small>
+                  <small>{t.niche} · dès 9€/mois</small>
                 </div>
                 <a href={WA} target="_blank" rel="noopener" className="go" title="Je veux ce template">→</a>
               </div>
@@ -381,12 +419,12 @@ export default function Home() {
       <section className="lk7-sec" id="compare">
         <div className="lk-sechead lk-reveal" style={{ marginBottom: 34 }}>
           <span className="lk-eye">Comparatif</span>
-          <h2 className="lk-h2-line">Karte vs les cartes NFC classiques</h2>
+          <h2 className="lk-h2-line">Bazookard vs les cartes NFC classiques</h2>
           <p>La carte signée <b>Adamkom</b> — la plus performante et la plus poussée du marché aujourd&apos;hui.</p>
         </div>
         <div className="lk7-comp lk-reveal rz">
           <table>
-            <thead><tr><th>Ce qui compte pour votre business</th><th className="karte">Karte</th><th>Les autres cartes NFC</th></tr></thead>
+            <thead><tr><th>Ce qui compte pour votre business</th><th className="karte">Bazookard</th><th>Les autres cartes NFC</th></tr></thead>
             <tbody>
               {COMP.map(([label, autres]) => (
                 <tr key={label}>
@@ -432,22 +470,18 @@ export default function Home() {
           <h2 className="lk-h2-line">Un abonnement simple. Tout inclus.</h2>
           <p>Votre mini-app NFC, mise à jour et hébergée, avec l&apos;IA incluse. Sans engagement.</p>
         </div>
-        <div className="lk-prices">
-          {PRICES.map((p) => (
-            <div key={p.plan} className={`lk-price lk-reveal ${p.feat ? "feat" : ""}`}>
-              {p.feat && <span className="lk-ribbon">⭐ La plus vendue</span>}
-              <div className="plan">{p.plan}</div>
-              <div className="amt">{p.amt}€ <small>{p.per}</small></div>
-              <ul>{p.feats.map((f) => <li key={f}>{f}</li>)}</ul>
-              <details>
-                <summary>Tout ce qui est inclus ↓</summary>
-                <ul>{MODULES.map((m) => <li key={m}>{m}</li>)}</ul>
-              </details>
-              <a href={WA} target="_blank" rel="noopener" className={`lk-btn ${p.feat ? "lk-btn-y" : ""}`} style={{ width: "100%", justifyContent: "center", marginTop: 10 }}>
-                📞 Appelez-nous pour commencer
-              </a>
-            </div>
-          ))}
+        <div className="lk-solo lk-reveal">
+          <div className="lk-solo-card">
+            <span className="lk-ribbon">⭐ Offre unique — tout compris</span>
+            <div className="plan">Abonnement Bazookard</div>
+            <div className="amt"><span className="big">{OFFER.amt}</span><small>{OFFER.per}</small></div>
+            <div className="sub">{OFFER.sub}</div>
+            <ul>{OFFER.feats.map((f) => <li key={f}>{f}</li>)}</ul>
+            <a href={WA} target="_blank" rel="noopener" className="lk-btn lk-btn-y" style={{ width: "100%", justifyContent: "center", marginTop: 14 }}>
+              📞 Je démarre pour 9€/mois
+            </a>
+            <div className="lk-solo-note">Carte NFC physique remise ou expédiée · Aucune application à installer</div>
+          </div>
         </div>
       </section>
 
@@ -512,7 +546,7 @@ export default function Home() {
           </div>
         </div>
         <div className="lk-wrap" style={{ borderTop: "1px solid var(--line)", marginTop: 30, paddingTop: 18, color: "var(--muted)", fontSize: 12.5, display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
-          <span>© 2026 Karte — Adamkom by JJP. Tous droits réservés.</span>
+          <span>© 2026 Bazookard — Adamkom by JJP. Tous droits réservés.</span>
           <span>Tap. Connect. Grow.</span>
         </div>
       </footer>

@@ -100,7 +100,7 @@ export default function WorkspacesPage() {
                 </select>
                 <p style={{ color: "var(--muted)", fontSize: 12, marginTop: 8 }}>Le client gère ce workspace depuis son back-office. Le quota dépend de son abonnement.</p>
                 <label className="a-label" style={{ marginTop: 14 }}>Clé API IA dédiée (facultatif)</label>
-                <input className="a-input" type="password" placeholder="sk-… (sinon clé globale Karte)"
+                <input className="a-input" type="password" placeholder="sk-… (sinon clé globale Bazookard)"
                   value={w.aiKey ?? ""} onChange={(e) => patch(w, { aiKey: e.target.value.trim() })} autoComplete="off" />
                 <p style={{ color: "var(--muted)", fontSize: 12, marginTop: 6 }}>Le chatbot de cette carte consommera cette clé OpenAI plutôt que la clé globale.</p>
               </div>

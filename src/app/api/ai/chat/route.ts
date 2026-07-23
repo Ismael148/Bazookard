@@ -26,7 +26,7 @@ async function resolveKey(cardId?: string): Promise<string | undefined> {
 async function fetchSiteText(url?: string): Promise<string> {
   if (!url || !/^https?:\/\//i.test(url)) return "";
   try {
-    const r = await fetch(url, { signal: AbortSignal.timeout(6000), headers: { "User-Agent": "KarteBot/1.0" } });
+    const r = await fetch(url, { signal: AbortSignal.timeout(6000), headers: { "User-Agent": "BazookardBot/1.0" } });
     if (!r.ok) return "";
     const html = await r.text();
     return html
@@ -51,7 +51,7 @@ export async function POST(req: Request) {
   }));
   if (!messages.length) return NextResponse.json({ error: "Message vide." }, { status: 400 });
 
-  const system = `Tu es l'assistant de cette entreprise sur sa carte NFC Karte. Tu réponds en français, avec chaleur et concision (2-3 phrases max), comme un membre de l'équipe.
+  const system = `Tu es l'assistant de cette entreprise sur sa carte NFC Bazookard. Tu réponds en français, avec chaleur et concision (2-3 phrases max), comme un membre de l'équipe.
 
 CONTENU DE LA CARTE :
 ${String(body.cardText ?? "").slice(0, 4000)}

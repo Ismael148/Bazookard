@@ -1,5 +1,5 @@
 "use client";
-// Couche upload Karte — mode DÉMO.
+// Couche upload Bazookard — mode DÉMO.
 // Aujourd'hui : compression côté client → data URL (localStorage).
 // En prod : uploadImage() enverra le fichier compressé vers Supabase Storage
 // (URL signée + CDN) et renverra l'URL publique. Même signature.

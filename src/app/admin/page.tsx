@@ -43,7 +43,7 @@ export default function AdminDashboard() {
 
   return (
     <div>
-      <AdminHeader title="Vue d'ensemble" subtitle="Pilotage de votre activité Karte">
+      <AdminHeader title="Vue d'ensemble" subtitle="Pilotage de votre activité Bazookard">
         <Link href="/admin/workspaces" className="a-btn a-btn-primary"><Icon name="plus" size={15} /> Nouveau workspace</Link>
       </AdminHeader>
 
