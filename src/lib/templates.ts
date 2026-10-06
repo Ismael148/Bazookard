@@ -31,6 +31,16 @@ export const TEMPLATES: CardTemplate[] = [
     blocks: [
       { type: "banner", data: { image: U("photo-1512917774080-9991f1c4c750") } },
       { type: "profile", data: { name: "Villa Azur", title: "Location saisonnière", company: "Nice, France", photo: "", bio: "Bienvenue chez vous ! Tout ce qu'il faut pour un séjour parfait est sur cette page." } },
+      { type: "welcome", data: { title: "📖 Livret d'accueil", intro: "Tout votre séjour en un clin d'œil — cliquez sur une rubrique.", items: [
+        { icon: "🛬", label: "Arrivée", desc: "Arrivée autonome à partir de 15h. Boîte à clés près de la porte, code envoyé la veille par SMS.", image: "", video: "" },
+        { icon: "🅿️", label: "Parking", desc: "Place privée gratuite devant le logement. Accès de plain-pied (PMR).", image: "", video: "" },
+        { icon: "🛜", label: "Wi-Fi", desc: "Réseau et mot de passe affichés dans l'entrée. Débit fibre dans tout le logement.", image: "", video: "" },
+        { icon: "📺", label: "Télévision", desc: "Smart TV avec Netflix et YouTube. Télécommande sur la table basse.", image: "", video: "" },
+        { icon: "🍳", label: "Cuisine", desc: "Plaques, four, micro-ondes, cafetière. Sel, huile et épices de base fournis.", image: "", video: "" },
+        { icon: "🌡️", label: "Chauffage / Clim", desc: "Climatiseur réversible dans chaque pièce. Merci d'éteindre en sortant.", image: "", video: "" },
+        { icon: "🚮", label: "Poubelles", desc: "Ordures : bac vert. Tri : bac jaune. Local à gauche du portail.", image: "", video: "" },
+        { icon: "🛫", label: "Départ", desc: "Départ jusqu'à 11h. Merci de laisser les clés dans la boîte et de fermer les fenêtres.", image: "", video: "" },
+      ] } },
       { type: "wifi", data: { network: "VillaAzur_5G", password: "soleil2026", note: "Le routeur est dans l'entrée." } },
       { type: "list", data: { title: "🔑 Arrivée & départ", items: [
         { label: "Check-in", value: "à partir de 15h00" },
@@ -425,6 +435,38 @@ export const TEMPLATES: CardTemplate[] = [
       { type: "reservation", data: { title: "Prolonger / réserver à nouveau", note: "Envie de revenir ? Écrivez-nous.", whatsapp: "262693802201", askPeople: true } },
       { type: "reviews", data: { title: "⭐ Votre avis compte", style: "tuiles", text: "Un avis nous aide énormément. Merci !", items: [{ platform: "airbnb", url: "" }, { platform: "google", url: "" }] } },
       { type: "chatbot", data: { greeting: "Bonjour 👋 Je suis votre conciergerie virtuelle. Wi-Fi, équipements, bonnes adresses : demandez-moi !", knowledge: "Villa de luxe 5 chambres à Saint-Gilles. Piscine chauffée, ménage inclus, accès PMR. Arrivée 16h, départ 11h." } },
+    ],
+  },
+  /* ========== 12. HÔTEL / SUITE — LIVRET D'ACCUEIL (façon OpenGO) ========== */
+  {
+    id: "tpl-livret",
+    name: "Le Nid Douillet",
+    niche: "Hôtel / Suite / Livret",
+    emoji: "🛎️",
+    themeIndex: 1, // Océan — turquoise doux, ambiance hôtellerie
+    description: "Livret d'accueil digital pur : chaque rubrique s'ouvre en fiche détaillée. Idéal hôtel, chambre d'hôte, suite.",
+    blocks: [
+      { type: "banner", data: { image: U("photo-1618773928121-c32242e63f39") } },
+      { type: "profile", data: { name: "Le Nid Douillet", title: "Votre suite · Livret d'accueil", company: "Bienvenue 👋", photo: "", bio: "Ravis de vous accueillir. Retrouvez ici toutes les infos de votre séjour, à portée de tap." } },
+      { type: "welcome", data: { title: "📖 Votre séjour", intro: "Cliquez sur une rubrique pour tout savoir.", items: [
+        { icon: "🛬", label: "Arrivée", desc: "Arrivée autonome à partir de 15h. Boîte à clés près de la porte, code envoyé la veille par SMS.", image: "", video: "" },
+        { icon: "🅿️", label: "Parking", desc: "Place privée gratuite devant le logement. Accès de plain-pied (PMR).", image: "", video: "" },
+        { icon: "🛜", label: "Wi-Fi", desc: "Réseau et mot de passe affichés dans l'entrée. Débit fibre dans tout le logement.", image: "", video: "" },
+        { icon: "📺", label: "Télévision", desc: "Smart TV avec Netflix et YouTube. Télécommande sur la table basse.", image: "", video: "" },
+        { icon: "🍳", label: "Cuisine", desc: "Plaques, four, micro-ondes, cafetière. Sel, huile et épices de base fournis.", image: "", video: "" },
+        { icon: "🌡️", label: "Chauffage / Clim", desc: "Climatiseur réversible dans chaque pièce. Merci d'éteindre en sortant.", image: "", video: "" },
+        { icon: "🚮", label: "Poubelles", desc: "Ordures : bac vert. Tri : bac jaune. Local à gauche du portail.", image: "", video: "" },
+        { icon: "🛫", label: "Départ", desc: "Départ jusqu'à 11h. Merci de laisser les clés dans la boîte et de fermer les fenêtres.", image: "", video: "" },
+      ] } },
+      { type: "equipment", data: { title: "🛎️ Équipements & services" } },
+      { type: "rules", data: { title: "📋 Règles de la maison" } },
+      { type: "around", data: { title: "❤️ Nos recommandations", items: [
+        { image: U("photo-1414235077428-338989a2e8c0"), name: "Nos bonnes tables", desc: "Les restos qu'on adore, tout près", distance: "5 min", cat: "Restaurants et cafés" },
+        { image: U("photo-1507525428034-b723cf961d3e"), name: "Balade & nature", desc: "Le plus beau spot du coin", distance: "10 min", cat: "Environnement naturel" },
+      ] } },
+      { type: "reviews", data: { title: "⭐ Votre avis compte", style: "tuiles", text: "Un mot suffit à nous faire plaisir. Merci !", items: [{ platform: "airbnb", url: "" }, { platform: "booking", url: "" }, { platform: "google", url: "" }] } },
+      { type: "contact", data: { phone: "+262693802201", email: "", whatsapp: "262693802201", wamsg: "Bonjour, une question sur mon séjour :", address: "", website: "", savebtn: false } },
+      { type: "chatbot", data: { greeting: "Bonjour 👋 Wi-Fi, parking, recommandations… je réponds à toutes vos questions sur le séjour !", knowledge: "Livret d'accueil d'une suite. Arrivée 15h, départ 11h. Wi-Fi et TV Netflix inclus." } },
     ],
   },
 ];

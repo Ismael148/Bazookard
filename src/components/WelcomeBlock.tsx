@@ -26,13 +26,18 @@ export default function WelcomeBlock({ data }: { data: Dict }) {
       {s(data.title) && <div className="kc-sec-title">{s(data.title)}</div>}
       {s(data.intro) && <p className="kc-welcome-intro">{s(data.intro)}</p>}
       <div className="kc-welcome-grid">
-        {items.map((i, k) => (
-          <button key={k} type="button" className="kc-welcome-tile" onClick={() => setOpen(i)} style={{ animationDelay: `${k * 45}ms` }}>
-            <span className="ic">{s(i.icon) || "📌"}</span>
-            <span className="lb">{s(i.label)}</span>
-            <span className="ar">›</span>
-          </button>
-        ))}
+        {items.map((i, k) => {
+          const img = s(i.image);
+          return (
+            <button key={k} type="button" className={`kc-welcome-tile${img ? " has-img" : ""}`} onClick={() => setOpen(i)}
+              style={{ animationDelay: `${k * 45}ms`, ...(img ? { backgroundImage: `url('${img}')` } : {}) }}>
+              {img && <span className="ov" />}
+              <span className="ic">{s(i.icon) || "📌"}</span>
+              <span className="lb">{s(i.label)}</span>
+              <span className="ar">›</span>
+            </button>
+          );
+        })}
       </div>
 
       {open && (

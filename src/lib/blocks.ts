@@ -35,19 +35,26 @@ export const BLOCK_DEFS: BlockDef[] = [
   // --- Identité ---
   {
     type: "profile", name: "Profil", icon: "👤", category: "Identité",
-    defaults: { name: "Ton Nom", title: "Poste", company: "Entreprise", photo: "", bio: "Networking sans contact. Tapez pour échanger nos coordonnées." },
+    defaults: { name: "Ton Nom", title: "Poste", company: "Entreprise", photo: "", bio: "Networking sans contact. Tapez pour échanger nos coordonnées.", phone: "", email: "", address: "", savebtn: true },
     fields: [
       { key: "name", label: "Nom complet", type: "text" },
       { key: "title", label: "Poste / Titre", type: "text" },
       { key: "company", label: "Entreprise", type: "text" },
       { key: "photo", label: "Photo (URL)", type: "image" },
       { key: "bio", label: "Bio courte", type: "textarea", ai: true },
+      { key: "phone", label: "Téléphone", type: "tel", placeholder: "+262 6 92 …" },
+      { key: "email", label: "Email", type: "email", placeholder: "contact@monentreprise.re" },
+      { key: "address", label: "Adresse physique", type: "text", placeholder: "12 rue du Commerce, Saint-Denis" },
+      { key: "savebtn", label: "Bouton « Enregistrer le contact » (vCard)", type: "toggle" },
     ],
   },
   {
     type: "banner", name: "Bannière", icon: "🖼️", category: "Identité",
     defaults: { image: "" },
-    fields: [{ key: "image", label: "Image de bannière (URL)", type: "image" }],
+    fields: [
+      { key: "image", label: "Image de bannière (URL)", type: "image" },
+      { key: "url", label: "Lien au clic (optionnel) — redirige quand on clique l'image", type: "url" },
+    ],
   },
   {
     type: "avatar", name: "Avatar", icon: "🙂", category: "Identité",
@@ -120,7 +127,10 @@ export const BLOCK_DEFS: BlockDef[] = [
     defaults: { items: [{ image: "" }] },
     fields: [{
       key: "items", label: "Images", type: "repeater", addLabel: "+ Ajouter une image",
-      item: [{ key: "image", label: "Image (URL)", type: "image" }],
+      item: [
+        { key: "image", label: "Image (URL)", type: "image" },
+        { key: "url", label: "Lien au clic (optionnel)", type: "url" },
+      ],
     }],
   },
   {
@@ -128,7 +138,10 @@ export const BLOCK_DEFS: BlockDef[] = [
     defaults: { items: [{ image: "" }] },
     fields: [{
       key: "items", label: "Images", type: "repeater", addLabel: "+ Ajouter une image",
-      item: [{ key: "image", label: "Image (URL)", type: "image" }],
+      item: [
+        { key: "image", label: "Image (URL)", type: "image" },
+        { key: "url", label: "Lien au clic (optionnel)", type: "url" },
+      ],
     }],
   },
   {
@@ -490,6 +503,29 @@ export const BLOCK_DEFS: BlockDef[] = [
           { key: "desc", label: "Détail", type: "textarea" },
         ],
       },
+    ],
+  },
+  {
+    type: "maps", name: "Google Maps", icon: "📍", category: "Contact",
+    defaults: {
+      title: "Nous trouver",
+      address: "12 rue du Commerce, Saint-Denis, La Réunion",
+      note: "Ouvert tous les jours — venez comme vous êtes.",
+      format: "16:9",
+      btnLabel: "Itinéraire",
+    },
+    fields: [
+      { key: "title", label: "Titre", type: "text" },
+      { key: "address", label: "Adresse (ou lieu) affichée sur la carte", type: "text", placeholder: "12 rue du Commerce, Saint-Denis" },
+      { key: "note", label: "Note (optionnel)", type: "text" },
+      { key: "format", label: "Format de la carte", type: "select", options: [
+        ["16:9", "Paysage 16:9"],
+        ["4:3", "Classique 4:3"],
+        ["1:1", "Carré 1:1"],
+        ["3:4", "Portrait 3:4"],
+        ["21:9", "Panoramique 21:9"],
+      ] },
+      { key: "btnLabel", label: "Texte du bouton itinéraire", type: "text", placeholder: "Itinéraire" },
     ],
   },
   {

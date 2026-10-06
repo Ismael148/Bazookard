@@ -3,29 +3,33 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Icon from "@/components/Icon";
-import { clientSession, clientLoginDb, type ClientSession, type ClientWs } from "@/lib/admin-db";
+import ConfirmModal from "@/components/ConfirmModal";
+import { clientSession, clientLoginDb, clientDeleteLead, type ClientSession, type ClientWs } from "@/lib/admin-db";
 import { getLeads, type Lead } from "@/lib/tracking";
 
 export default function ClientLeads() {
   const [sess, setSess] = useState<ClientSession | null>(null);
   const [extra, setExtra] = useState<Record<string, Lead[]>>({});
   const [q, setQ] = useState("");
+  const [toDelete, setToDelete] = useState<{ cardId: string; lead: Lead } | null>(null);
   const router = useRouter();
 
-  useEffect(() => {
+  async function load() {
     const s = clientSession();
     if (!s) { router.replace("/client/login"); return; }
     setSess(s);
-    void clientLoginDb(s.client.email, s.password).then((fresh) => { if (fresh) setSess(fresh); });
-    (async () => {
-      const ld: Record<string, Lead[]> = {};
-      for (const w of s.workspaces) {
-        if (!w.cardId || !w.permissions.viewLeads || w.leads?.length) continue;
-        ld[w.cardId] = await getLeads(w.cardId);
-      }
-      setExtra(ld);
-    })();
-  }, [router]);
+    const fresh = await clientLoginDb(s.client.email, s.password);
+    const cur = fresh ?? s;
+    if (fresh) setSess(fresh);
+    const ld: Record<string, Lead[]> = {};
+    for (const w of cur.workspaces) {
+      if (!w.cardId || !w.permissions.viewLeads || w.leads?.length) continue;
+      ld[w.cardId] = await getLeads(w.cardId);
+    }
+    setExtra(ld);
+  }
+
+  useEffect(() => { void load(); }, [router]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!sess) return null;
   const leadsOf = (w: ClientWs): Lead[] => (w.leads?.length ? w.leads : (w.cardId ? extra[w.cardId] ?? [] : []));
@@ -33,6 +37,7 @@ export default function ClientLeads() {
     .filter((w) => w.permissions.viewLeads)
     .map((w) => ({
       ws: w.name,
+      cardId: w.cardId,
       items: leadsOf(w).filter((l) => {
         const s = q.trim().toLowerCase();
         return !s || l.name.toLowerCase().includes(s) || l.contact.toLowerCase().includes(s);
@@ -87,6 +92,12 @@ export default function ClientLeads() {
                   </div>
                   <span style={{ color: "var(--muted)", fontSize: 12, flexShrink: 0 }}>{new Date(l.ts).toLocaleDateString("fr-FR")}</span>
                   {href && <a href={href} className="a-btn a-btn-sm a-btn-primary" style={{ flexShrink: 0 }}>Répondre</a>}
+                  {g.cardId && (
+                    <button className="a-btn a-btn-sm a-btn-danger" style={{ flexShrink: 0 }} title="Supprimer ce message"
+                      onClick={() => setToDelete({ cardId: g.cardId as string, lead: l })}>
+                      <Icon name="trash" size={15} />
+                    </button>
+                  )}
                 </div>
               );
             })}
@@ -98,6 +109,24 @@ export default function ClientLeads() {
           </div>
         )}
       </div>
+
+      {toDelete && (
+        <ConfirmModal
+          message={`Supprimer le message de « ${toDelete.lead.name || toDelete.lead.contact || "ce contact"} » ?`}
+          onCancel={() => setToDelete(null)}
+          onConfirm={() => {
+            const { cardId, lead } = toDelete;
+            setToDelete(null);
+            void clientDeleteLead(cardId, lead).then((ok) => {
+              if (ok) {
+                // retire aussi de la liste locale « extra » (cas lecture directe)
+                setExtra((prev) => ({ ...prev, [cardId]: (prev[cardId] ?? []).filter((x) => (lead.id ? x.id !== lead.id : x.ts !== lead.ts)) }));
+                void load();
+              }
+            });
+          }}
+        />
+      )}
     </div>
   );
 }

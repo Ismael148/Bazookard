@@ -4,7 +4,7 @@ import { supabaseEnabled, createClient } from "./supabase/client";
 
 export type StatEvent = "view" | "tap" | "chat" | "lead";
 export interface Stats { view: number; tap: number; chat: number; lead: number }
-export interface Lead { name: string; contact: string; ts: number }
+export interface Lead { name: string; contact: string; ts: number; id?: string }
 
 const SK = (id: string) => `karte_stats_${id}`;
 const LK = (id: string) => `karte_leads_${id}`;
@@ -76,16 +76,26 @@ export function saveLead(cardId: string, name: string, contact: string) {
     localStorage.setItem(LK(cardId), JSON.stringify(list.slice(0, 200)));
   } catch {}
   if (supabaseEnabled()) {
-    void createClient().from("leads").insert({ card_id: cardId, name, email: contact.includes("@") ? contact : null, phone: contact.includes("@") ? null : contact, source: "carte" });
+    const email = contact.includes("@") ? contact : null;
+    const phone = contact.includes("@") ? null : contact;
+    void (async () => {
+      const sb = createClient();
+      // 1) Fonction sécurisée (contourne les RLS de façon fiable)
+      const { error } = await sb.rpc("save_lead", { p_card: cardId, p_name: name, p_email: email, p_phone: phone });
+      // 2) Repli : insertion directe si la fonction n'existe pas encore
+      if (error) {
+        await sb.from("leads").insert({ card_id: cardId, name, email, phone, source: "carte" });
+      }
+    })().catch(() => {});
   }
 }
 
 export async function getLeads(cardId: string): Promise<Lead[]> {
   if (supabaseEnabled()) {
     try {
-      const { data } = await createClient().from("leads").select("name,email,phone,created_at").eq("card_id", cardId).order("created_at", { ascending: false }).limit(100);
-      return (data ?? []).map((r: { name: string | null; email: string | null; phone: string | null; created_at: string }) => ({
-        name: r.name ?? "", contact: r.email || r.phone || "", ts: new Date(r.created_at).getTime(),
+      const { data } = await createClient().from("leads").select("id,name,email,phone,created_at").eq("card_id", cardId).order("created_at", { ascending: false }).limit(100);
+      return (data ?? []).map((r: { id: string; name: string | null; email: string | null; phone: string | null; created_at: string }) => ({
+        id: r.id, name: r.name ?? "", contact: r.email || r.phone || "", ts: new Date(r.created_at).getTime(),
       }));
     } catch { return []; }
   }

@@ -36,6 +36,7 @@ const P: Record<string, string> = {
   export: "M12 15V3M8 7l4-4 4 4M5 15v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4",
   pie: "M12 3v9h9a9 9 0 1 1-9-9Z",
   cash: "M2 6h20v12H2zM12 14.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z",
+  gift: "M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7S10.5 3 7.5 3a2 2 0 0 0 0 4H12M12 7s1.5-4 4.5-4a2 2 0 0 1 0 4H12",
 };
 
 export default function Icon({

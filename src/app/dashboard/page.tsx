@@ -57,11 +57,14 @@ export default function Dashboard() {
           <span style={{ width: 30, height: 30, borderRadius: 8, background: "var(--accent)", color: "var(--accent-ink)", display: "grid", placeItems: "center" }}>⚡</span>
           Bazookard
         </Link>
-        <div style={{ display: "flex", gap: 8 }}>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+          <Link href="/admin" className="btn">🗂 Back-office</Link>
           <button onClick={() => setPicking(true)} className="btn btn-primary">+ Nouvelle carte</button>
-          {supabaseEnabled() && (
-            <button onClick={async () => { await signOut(); router.replace("/login"); }} className="btn btn-ghost">Déconnexion</button>
-          )}
+          <button
+            onClick={async () => { try { await signOut(); } catch {} router.replace(supabaseEnabled() ? "/login" : "/"); }}
+            className="btn btn-ghost">
+            Déconnexion
+          </button>
         </div>
       </nav>
 

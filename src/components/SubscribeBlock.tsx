@@ -20,10 +20,12 @@ export default function SubscribeBlock({ cardId, data }: { cardId: string; data:
 
   if (done) {
     return (
-      <div style={{ textAlign: "center", padding: "8px 0" }}>
-        <div style={{ fontSize: 30 }}>🎉</div>
-        <div className="kc-sec-title" style={{ marginTop: 6, marginBottom: 2 }}>Merci !</div>
-        <p style={{ fontSize: 13, color: "var(--c-soft)" }}>Votre inscription est bien enregistrée.</p>
+      <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "18px 8px" }}>
+        <div style={{ width: 56, height: 56, borderRadius: "50%", display: "grid", placeItems: "center", fontSize: 28,
+          background: "linear-gradient(135deg, var(--c-accent), var(--c-accent2))", color: "var(--c-accent-ink)",
+          boxShadow: "0 10px 26px -8px color-mix(in srgb, var(--c-accent) 60%, transparent)" }}>✓</div>
+        <div style={{ fontFamily: "var(--font-display), sans-serif", fontSize: 20, fontWeight: 800, marginTop: 4 }}>Merci !</div>
+        <p style={{ fontSize: 14, color: "var(--c-soft)", lineHeight: 1.5, maxWidth: "26ch" }}>Votre inscription est bien enregistrée.</p>
       </div>
     );
   }

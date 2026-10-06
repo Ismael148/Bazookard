@@ -6,19 +6,34 @@ import Icon from "@/components/Icon";
 import { LogoImg } from "@/components/Logo";
 import { clientSession, clientLogoutDb } from "@/lib/admin-db";
 
+const SEEN_KEY = "bzk_seen_leads";
+
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [ready, setReady] = useState(false);
   const [company, setCompany] = useState("");
+  const [newLeads, setNewLeads] = useState(0);
   const isLogin = pathname === "/client/login";
   const isEditor = pathname.startsWith("/client/editor");
 
   useEffect(() => {
     if (isLogin) { setReady(true); return; }
     const s = clientSession();
-    if (!s) router.replace("/client/login");
-    else { setCompany(s.client.company); setReady(true); }
+    if (!s) { router.replace("/client/login"); return; }
+    setCompany(s.client.company);
+    setReady(true);
+    // Total des messages/contacts reçus (toutes cartes) = notification si nouveaux
+    const total = s.workspaces.reduce((a, w) => a + (w.stats?.lead ?? 0), 0);
+    let seen = 0;
+    try { seen = Number(localStorage.getItem(SEEN_KEY) || "0"); } catch {}
+    if (pathname === "/client/leads") {
+      // On considère les messages comme lus dès qu'on ouvre la boîte
+      try { localStorage.setItem(SEEN_KEY, String(total)); } catch {}
+      setNewLeads(0);
+    } else {
+      setNewLeads(Math.max(0, total - seen));
+    }
   }, [pathname, isLogin, router]);
 
   if (isLogin) return <div className="admin">{children}</div>;
@@ -35,7 +50,11 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
         <nav style={{ display: "flex", flexDirection: "column", gap: 3 }}>
           <Link href="/client" className={`a-nav-item${pathname === "/client" ? " active" : ""}`}><Icon name="card" size={18} /> Mes cartes</Link>
           <Link href="/client/stats" className={`a-nav-item${pathname === "/client/stats" ? " active" : ""}`}><Icon name="pie" size={18} /> Performance</Link>
-          <Link href="/client/leads" className={`a-nav-item${pathname === "/client/leads" ? " active" : ""}`}><Icon name="inbox" size={18} /> Contacts &amp; messages</Link>
+          <Link href="/client/leads" className={`a-nav-item${pathname === "/client/leads" ? " active" : ""}`}>
+            <Icon name="inbox" size={18} /> Contacts &amp; messages
+            {newLeads > 0 && <span className="cl-badge">{newLeads > 99 ? "99+" : newLeads}</span>}
+          </Link>
+          <Link href="/client/loyalty" className={`a-nav-item${pathname === "/client/loyalty" ? " active" : ""}`}><Icon name="gift" size={18} /> Fidélité</Link>
         </nav>
         <div style={{ marginTop: "auto", borderTop: "1px solid var(--line)", paddingTop: 14 }}>
           <div style={{ fontSize: 12.5, color: "var(--ink2)", padding: "0 8px 10px", fontWeight: 600 }}>{company}</div>

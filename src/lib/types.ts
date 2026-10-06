@@ -6,7 +6,7 @@ export type BlockType =
   | "video" | "podcast" | "list" | "iframe" | "product" | "payment"
   | "subscribe" | "appointment" | "feedback" | "testimonial" | "chatbot"
   | "menu" | "offers" | "reviews" | "hours" | "wifi" | "events" | "loyalty" | "equipment" | "around"
-  | "reservation" | "form" | "rules" | "welcome";
+  | "reservation" | "form" | "rules" | "welcome" | "maps";
 
 export interface Block {
   id: string;
@@ -32,6 +32,13 @@ export interface CardCustom {
   avatarSize?: number;                                        // taille avatar (50–130 px)
   avatarRing?: boolean;                                       // anneau blanc autour (false = transparent)
   avatarShadow?: boolean;                                     // ombre portée de l'avatar
+  credit?: string;                                            // texte « Propulsé par … » (défaut : Bazookard)
+  hideCredit?: boolean;                                       // masquer complètement la mention « Propulsé par »
+  qrLogo?: string;                                            // logo affiché au centre du QR code
+  hideQr?: boolean;                                           // masquer le QR code en bas de carte
+  heroHeight?: number;                                        // hauteur du hero/bannière (200–620 px)
+  bgImage?: string;                                           // image de fond de toute la carte
+  bgOverlay?: number;                                         // voile sombre sur l'image de fond (0–100 %)
 }
 
 export const CARD_FONTS: Record<string, { label: string; stack: string }> = {

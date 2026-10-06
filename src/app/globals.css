@@ -155,6 +155,7 @@ textarea.in { resize: vertical; min-height: 58px; }
    Les couleurs viennent des variables --c-* posées par CardRenderer.
    =================================================================== */
 .kc {
+  position: relative;
   background: var(--c-bg);
   color: var(--c-ink);
   min-height: 100%;
@@ -176,33 +177,66 @@ textarea.in { resize: vertical; min-height: 58px; }
 .kc-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 999px; background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.22); backdrop-filter: blur(8px); color: #fff; }
 .kc-avatar { width: 74px; height: 74px; border-radius: 50%; border: 3px solid rgba(255,255,255,.85); background-size: cover; background-position: center; box-shadow: 0 8px 24px rgba(0,0,0,.35); margin-bottom: 12px; }
 
-/* Corps : sections en cartes arrondies qui remontent sur le hero */
-.kc-body { position: relative; z-index: 2; display: flex; flex-direction: column; gap: 12px; padding: 0 14px 28px; margin-top: -22px; }
-/* Effet de scroll doux : le hero reste en place, les sections glissent par-dessus
-   (plus d'effet « amplifié » — même comportement dans l'aperçu éditeur et sur mobile) */
-.kc-hero { position: sticky; top: 0; z-index: 0; }
+/* Corps : sections en cartes arrondies. Fond transparent → la transition hero→section
+   reste douce (dégradé du hero), pas de ligne dure. */
+.kc-body { position: relative; z-index: 2; display: flex; flex-direction: column; gap: 9px; padding: 0 12px 26px; margin-top: -22px; }
+/* Le hero défile normalement (pas figé derrière les sections) */
+.kc-hero { position: relative; z-index: 0; }
+/* EFFET EMPILÉ : chaque section se colle en haut, la suivante glisse par-dessus.
+   Fond opaque sur CHAQUE section → pas de transparence, mais ombre douce conservée. */
 .kc-sec {
+  position: sticky; top: 0;
   overflow: hidden;
-  background: var(--c-surface);
-  border: 1px solid var(--c-line);
-  border-radius: 20px;
-  padding: 18px;
-  box-shadow: 0 2px 4px rgba(10,10,12,.04), 0 12px 32px -14px rgba(10,10,12,.10);
+  background:
+    radial-gradient(130% 90% at 100% 0, color-mix(in srgb, var(--c-accent) 7%, transparent), transparent 55%),
+    var(--c-surface);
+  border: 1px solid color-mix(in srgb, var(--c-line) 80%, transparent);
+  border-radius: 22px;
+  padding: 14px 15px;
+  box-shadow: 0 1px 0 rgba(255,255,255,.7) inset, 0 4px 10px -6px rgba(10,10,12,.10), 0 18px 38px -26px rgba(10,10,12,.26);
   animation: kcUp .5s cubic-bezier(.16,1,.3,1) both;
 }
-.kc-sec-title { font-family: var(--font-display), sans-serif; font-size: 15px; font-weight: 700; margin-bottom: 10px; letter-spacing: -.01em; }
+/* fine barre d'accent en haut de chaque section (signature premium) */
+.kc-sec::before {
+  content: ""; position: absolute; top: 0; left: 22px; width: 34px; height: 3px; border-radius: 0 0 4px 4px;
+  background: linear-gradient(90deg, var(--c-accent), var(--c-accent2));
+}
+.kc-sec--flush::before, .kc-sec--media::before { display: none; }
+.kc-sec-title {
+  font-family: var(--font-display), sans-serif; font-size: 16px; font-weight: 800; margin-bottom: 10px; letter-spacing: -.02em;
+  display: flex; align-items: center; gap: 9px;
+}
+.kc-sec-title::before {
+  content: ""; width: 5px; height: 17px; border-radius: 3px; flex-shrink: 0;
+  background: linear-gradient(180deg, var(--c-accent), var(--c-accent2));
+}
 .kc-sec--media { padding: 9px; }
-.kc-sec--flush { padding: 0; background: transparent; border: none; box-shadow: none; }
+/* Sections transparentes (vidéo, réseaux, livret) : pas d'empilement (elles défilent normalement) */
+.kc-sec--flush { position: relative; top: auto; padding: 0; background: transparent; border: none; box-shadow: none; }
 .kc-sec--media .kc-sec-title { padding: 6px 9px 0; }
 @keyframes kcUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 
-/* Lignes d'action (contact) */
-.kc-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px; background: var(--c-bg); color: var(--c-ink); text-decoration: none; font-weight: 600; font-size: 14px; transition: transform .15s ease; }
+/* Lignes d'action (contact) — tuiles premium façon link-in-bio */
+.kc-row { display: flex; align-items: center; gap: 13px; padding: 14px 16px; border-radius: 16px;
+  background: color-mix(in srgb, var(--c-bg) 70%, var(--c-surface)); border: 1px solid var(--c-line);
+  color: var(--c-ink); text-decoration: none; font-weight: 700; font-size: 14.5px;
+  box-shadow: 0 6px 16px -12px rgba(10,10,12,.35); transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease; }
+.kc-row::after { content: "›"; margin-left: auto; font-size: 22px; font-weight: 400; color: var(--c-soft); transition: transform .16s ease; }
+.kc-row:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--c-accent) 45%, var(--c-line)); box-shadow: 0 14px 26px -16px color-mix(in srgb, var(--c-accent) 55%, transparent); }
+.kc-row:hover::after { transform: translateX(3px); }
 .kc-row:active { transform: scale(.98); }
-.kc-row-ic { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; color: var(--c-accent-ink); background: linear-gradient(135deg, var(--c-accent), var(--c-accent2)); flex-shrink: 0; font-size: 15px; }
+.kc-row-ic { width: 40px; height: 40px; border-radius: 13px; display: grid; place-items: center; color: var(--c-accent-ink); background: linear-gradient(135deg, var(--c-accent), var(--c-accent2)); flex-shrink: 0; font-size: 16px; box-shadow: 0 8px 16px -8px color-mix(in srgb, var(--c-accent) 60%, transparent), inset 0 1px 0 rgba(255,255,255,.35); }
 
-/* CTA plein */
-.kc-cta { display: block; text-align: center; padding: 14px 16px; border-radius: 14px; color: var(--c-accent-ink); text-decoration: none; font-weight: 700; font-size: 14px; background: linear-gradient(135deg, var(--c-accent), var(--c-accent2)); border: none; width: 100%; cursor: pointer; transition: transform .15s ease, box-shadow .15s ease; }
+/* CTA plein — premium, relief + brillance */
+.kc-cta { position: relative; overflow: hidden; display: block; text-align: center; padding: 16px 18px; border-radius: 16px;
+  color: var(--c-accent-ink); text-decoration: none; font-weight: 800; font-size: 15px; letter-spacing: .01em;
+  background: linear-gradient(135deg, var(--c-accent), var(--c-accent2)); border: none; width: 100%; cursor: pointer;
+  box-shadow: 0 12px 26px -12px color-mix(in srgb, var(--c-accent) 75%, transparent), inset 0 1px 0 rgba(255,255,255,.4);
+  transition: transform .16s ease, box-shadow .16s ease; }
+.kc-cta::after { content: ""; position: absolute; top: 0; left: -60%; width: 40%; height: 100%; transform: skewX(-20deg);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent); animation: kcShine 4.5s ease-in-out infinite; }
+@keyframes kcShine { 0%, 60% { left: -60%; } 100% { left: 130%; } }
+.kc-cta:hover { transform: translateY(-2px); box-shadow: 0 18px 34px -14px color-mix(in srgb, var(--c-accent) 80%, transparent), inset 0 1px 0 rgba(255,255,255,.4); }
 .kc-cta:active { transform: scale(.98); }
 
 /* Action bar flottante (la « tab bar » de la mini-app) */
@@ -226,17 +260,26 @@ textarea.in { resize: vertical; min-height: 58px; }
   box-shadow: 0 10px 26px -6px rgba(0,0,0,.45); cursor: pointer;
 }
 
-/* Bulle chatbot flottante */
+/* Bulle chatbot flottante — TOUJOURS visible en bas à droite (fixe à l'écran) */
 .kc-chat {
-  position: sticky; bottom: 92px; z-index: 39; margin-left: auto; margin-right: 18px;
-  width: 48px; height: 48px; border-radius: 50%;
-  display: grid; place-items: center; font-size: 20px;
+  position: fixed; right: 18px; bottom: 18px; z-index: 60; align-self: flex-end;
+  width: 58px; height: 58px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 25px;
   background: linear-gradient(135deg, var(--c-accent), var(--c-accent2));
-  color: var(--c-accent-ink); border: none; cursor: pointer;
-  box-shadow: 0 10px 26px -8px rgba(0,0,0,.4);
-  animation: kcPulse 2.8s infinite;
+  color: var(--c-accent-ink); border: 3px solid rgba(255,255,255,.9); cursor: pointer;
+  box-shadow: 0 14px 30px -8px rgba(0,0,0,.45);
+  animation: kcPulse 2.6s infinite;
 }
-@keyframes kcPulse { 0%,100% { box-shadow: 0 10px 26px -8px rgba(0,0,0,.4), 0 0 0 0 rgba(255,255,255,.25); } 50% { box-shadow: 0 10px 26px -8px rgba(0,0,0,.4), 0 0 0 12px rgba(255,255,255,0); } }
+/* pastille « chat » pour indiquer que c'est un assistant */
+.kc-chat::after {
+  content: "💬"; position: absolute; top: -4px; right: -4px;
+  width: 22px; height: 22px; border-radius: 50%; background: #fff;
+  display: grid; place-items: center; font-size: 11px;
+  box-shadow: 0 3px 8px rgba(0,0,0,.25); animation: none;
+}
+@keyframes kcPulse { 0%,100% { box-shadow: 0 14px 30px -8px rgba(0,0,0,.45), 0 0 0 0 rgba(255,255,255,.3); } 50% { box-shadow: 0 14px 30px -8px rgba(0,0,0,.45), 0 0 0 14px rgba(255,255,255,0); } }
+/* Dans l'aperçu éditeur, le bouton reste collé au bas du téléphone (sticky, pas fixe à la fenêtre) */
+.ed-phone-scroll .kc-chat { position: sticky; right: auto; bottom: 16px; margin-right: 6px; }
 
 /* ===================================================================
    LANDING — premium emeraude (style Outcrowd)
@@ -1138,36 +1181,19 @@ textarea.in { resize: vertical; min-height: 58px; }
 /* ===================================================================
    BLOC RÉSEAUX SOCIAUX — fond glassmorphism + pastilles neumorphism
    =================================================================== */
+/* Réseaux sociaux : compact, SANS fond blanc — juste les pastilles en gros plan */
 .kc-social-glass {
-  display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;
-  padding: 16px 14px; border-radius: 20px;
-  background:
-    radial-gradient(120% 140% at 15% 0%, color-mix(in srgb, var(--c-accent) 16%, transparent), transparent 55%),
-    radial-gradient(120% 140% at 90% 110%, color-mix(in srgb, var(--c-accent2) 14%, transparent), transparent 55%),
-    linear-gradient(145deg, rgba(255,255,255,.55), rgba(255,255,255,.18));
-  border: 1px solid rgba(255,255,255,.55);
-  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.65),
-    0 10px 30px -14px rgba(10,10,12,.25);
+  display: flex; justify-content: center; gap: 14px; flex-wrap: wrap;
+  padding: 4px 0;
 }
+/* Icônes de marque en gros plan, colorées + relief, effet vivant au survol */
 .kc-social-pod {
-  display: grid; place-items: center; width: 62px; height: 62px; border-radius: 20px;
-  background: linear-gradient(145deg, color-mix(in srgb, var(--c-surface) 92%, #fff), color-mix(in srgb, var(--c-surface) 86%, #000));
-  box-shadow:
-    6px 6px 14px color-mix(in srgb, var(--c-ink) 14%, transparent),
-    -6px -6px 14px rgba(255,255,255,.85),
-    inset 0 0 0 1px rgba(255,255,255,.35);
-  transition: transform .22s cubic-bezier(.34,1.56,.64,1), box-shadow .22s;
+  display: grid; place-items: center; border-radius: 18px;
+  transition: transform .22s cubic-bezier(.34,1.56,.64,1), filter .22s;
   animation: kcPodIn .5s cubic-bezier(.16,1,.3,1) both;
 }
-.kc-social-pod:hover { transform: translateY(-4px) scale(1.06); }
-.kc-social-pod:active {
-  transform: scale(.94);
-  box-shadow:
-    inset 4px 4px 10px color-mix(in srgb, var(--c-ink) 16%, transparent),
-    inset -4px -4px 10px rgba(255,255,255,.7);
-}
+.kc-social-pod:hover { transform: translateY(-5px) scale(1.09); filter: brightness(1.07) saturate(1.1); }
+.kc-social-pod:active { transform: scale(.92); }
 @keyframes kcPodIn { from { opacity: 0; transform: translateY(10px) scale(.8); } to { opacity: 1; transform: none; } }
 
 /* ===================================================================
@@ -1281,24 +1307,38 @@ textarea.in { resize: vertical; min-height: 58px; }
 /* ===================================================================
    PAGE DE VENTE — Storytelling immersif + offre unique 9€
    =================================================================== */
-.lk7-story { position: relative; }
-.lk7-storygrid { display: grid; grid-template-columns: 1.55fr 1fr; gap: 28px; align-items: center; margin-top: 6px; }
-@media (max-width: 860px) { .lk7-storygrid { grid-template-columns: 1fr; } }
-.lk7-storytext p { font-size: 17px; line-height: 1.72; color: var(--ink2); margin: 0 0 15px; }
-.lk7-storytext b { color: var(--ink); }
-.lk7-storytext .hl { background: linear-gradient(180deg, transparent 62%, rgba(255,213,0,.55) 62%); font-weight: 700; color: var(--ink); }
-.lk7-turn { font-family: var(--font-display), serif; font-style: italic; font-size: 22px !important; line-height: 1.4 !important;
-  color: var(--ink) !important; font-weight: 600; margin-top: 22px !important; }
-.lk7-storycard { position: relative; background: linear-gradient(160deg, #17140C, #050505); color: #fff; border-radius: 24px;
-  padding: 30px 26px; overflow: hidden; box-shadow: 0 30px 70px -30px rgba(23,20,12,.6); }
-.lk7-storycard::before { content: ""; position: absolute; inset: 0; background: radial-gradient(120% 80% at 80% 0, rgba(255,213,0,.22), transparent 60%); }
-.lk7-storycard .tap { position: relative; font-size: 46px; margin-bottom: 14px; animation: lkTap 2.4s ease-in-out infinite; }
-@keyframes lkTap { 0%,100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-8px) rotate(2deg); } }
-.lk7-storycard .txt b { position: relative; display: block; font-size: 22px; font-weight: 800; margin-bottom: 8px; }
-.lk7-storycard .txt span { position: relative; display: block; font-size: 14.5px; line-height: 1.6; color: rgba(255,255,255,.82); }
-.lk7-storyneed { display: flex; flex-wrap: wrap; gap: 9px; justify-content: center; margin-top: 34px; }
-.lk7-storyneed .chip { font-size: 13.5px; font-weight: 700; padding: 9px 16px; border-radius: 999px;
-  background: #fff; border: 1px solid var(--line); color: var(--ink2); box-shadow: 0 4px 14px -10px rgba(23,20,12,.3); }
+.lk7-story { position: relative; text-align: center; }
+.lk7-story-head { margin-bottom: 40px; }
+.lk7-story-title { font-family: var(--font-display), sans-serif; font-weight: 800; letter-spacing: -.02em;
+  font-size: clamp(34px, 6vw, 68px); line-height: 1.02; margin-top: 12px; color: var(--ink); }
+.lk7-story-title .hl { color: #E8A800; }
+.lk7-story-title .lk7-it { font-style: italic; }
+
+.lk7-moments { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+@media (max-width: 780px) { .lk7-moments { grid-template-columns: 1fr; } }
+.lk7-moment { background: #fff; border: 1px solid var(--line); border-radius: 22px; padding: 30px 22px; text-align: center;
+  box-shadow: 0 14px 40px -26px rgba(23,20,12,.35); }
+.lk7-moment .em { font-size: 46px; display: block; margin-bottom: 14px; filter: grayscale(.15); }
+.lk7-moment b { display: block; font-size: 21px; font-weight: 800; color: var(--ink); margin-bottom: 6px; }
+.lk7-moment p { font-size: 15px; color: var(--muted); line-height: 1.5; margin: 0; }
+
+.lk7-bigline { font-family: var(--font-display), sans-serif; font-weight: 700; letter-spacing: -.01em;
+  font-size: clamp(24px, 3.6vw, 40px); line-height: 1.28; color: var(--ink); text-align: center;
+  max-width: 900px; margin: 56px auto; }
+.lk7-bigline .hl { background: linear-gradient(180deg, transparent 60%, rgba(255,213,0,.6) 60%); }
+.lk7-bigline .lk7-it { font-style: italic; color: #E8A800; }
+
+.lk7-flip { display: flex; align-items: center; gap: 22px; text-align: left; max-width: 760px; margin: 0 auto;
+  background: linear-gradient(150deg, #1b1710, #050505); color: #fff; border-radius: 26px; padding: 30px 32px;
+  position: relative; overflow: hidden; box-shadow: 0 34px 80px -34px rgba(23,20,12,.7); }
+.lk7-flip::before { content: ""; position: absolute; inset: 0; background: radial-gradient(120% 90% at 85% 0, rgba(255,213,0,.26), transparent 58%); }
+.lk7-flip > div { position: relative; z-index: 1; }
+.lk7-flip .tap { position: relative; z-index: 1; font-size: 60px; flex-shrink: 0; animation: lkTap 2.4s ease-in-out infinite; }
+@keyframes lkTap { 0%,100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-9px) rotate(3deg); } }
+.lk7-flip b { position: relative; display: block; font-size: clamp(22px, 3vw, 30px); font-weight: 800; margin-bottom: 8px; }
+.lk7-flip span { position: relative; display: block; font-size: 16px; line-height: 1.6; color: rgba(255,255,255,.85); }
+.lk7-flip span b { display: inline; color: #FFD500; font-size: inherit; }
+@media (max-width: 620px) { .lk7-flip { flex-direction: column; text-align: center; } }
 
 /* Offre unique centrée */
 .lk-solo { display: flex; justify-content: center; }
@@ -1321,28 +1361,41 @@ textarea.in { resize: vertical; min-height: 58px; }
 /* ===================================================================
    BLOC LIVRET D'ACCUEIL (gîtes / Airbnb / villas)
    =================================================================== */
-.kc-welcome-intro { font-size: 13px; color: var(--c-soft); line-height: 1.5; margin-bottom: 12px; }
-.kc-welcome-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
-.kc-welcome-tile { display: flex; align-items: center; gap: 11px; padding: 13px 14px; border-radius: 16px;
-  background: var(--c-bg); border: 1px solid var(--c-line); cursor: pointer; text-align: left; font-family: inherit;
-  color: var(--c-ink); transition: transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s, border-color .18s;
+.kc-welcome-intro { font-size: 13.5px; color: var(--c-soft); line-height: 1.55; margin-bottom: 14px; }
+.kc-welcome-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+/* Tuiles premium façon livret d'accueil (OpenGO) : grandes, profondes, image possible */
+.kc-welcome-tile { position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: flex-start; gap: 7px;
+  min-height: 104px; padding: 15px 16px; border-radius: 20px; cursor: pointer; text-align: left; font-family: inherit;
+  color: var(--c-ink); background:
+    radial-gradient(120% 100% at 100% 0, color-mix(in srgb, var(--c-accent) 14%, transparent), transparent 60%),
+    var(--c-surface);
+  border: 1px solid var(--c-line);
+  box-shadow: 0 1px 0 rgba(255,255,255,.6) inset, 0 14px 30px -20px rgba(10,10,12,.4);
+  transition: transform .2s cubic-bezier(.34,1.56,.64,1), box-shadow .2s, border-color .2s;
   animation: kcAFade .45s ease both; }
-.kc-welcome-tile:hover { transform: translateY(-2px); border-color: var(--c-accent);
-  box-shadow: 0 10px 22px -12px color-mix(in srgb, var(--c-accent) 60%, transparent); }
+.kc-welcome-tile:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var(--c-accent) 55%, var(--c-line));
+  box-shadow: 0 20px 36px -18px color-mix(in srgb, var(--c-accent) 55%, transparent); }
 .kc-welcome-tile:active { transform: scale(.97); }
-.kc-welcome-tile .ic { font-size: 22px; line-height: 1; flex-shrink: 0; }
-.kc-welcome-tile .lb { flex: 1; font-size: 13.5px; font-weight: 700; line-height: 1.2; }
-.kc-welcome-tile .ar { font-size: 20px; color: var(--c-soft); font-weight: 400; }
+.kc-welcome-tile .ic { font-size: 30px; line-height: 1; }
+.kc-welcome-tile .lb { font-size: 15px; font-weight: 800; line-height: 1.15; letter-spacing: -.01em; margin-top: auto; }
+.kc-welcome-tile .ar { position: absolute; top: 14px; right: 15px; font-size: 22px; color: var(--c-soft); font-weight: 400; transition: transform .18s; }
+.kc-welcome-tile:hover .ar { transform: translateX(3px); }
+/* Tuile avec photo de couverture */
+.kc-welcome-tile.has-img { background-size: cover; background-position: center; color: #fff; border-color: rgba(255,255,255,.15); }
+.kc-welcome-tile.has-img .ov { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(8,8,10,.15) 30%, rgba(8,8,10,.72)); }
+.kc-welcome-tile.has-img .ic, .kc-welcome-tile.has-img .lb, .kc-welcome-tile.has-img .ar { position: relative; z-index: 1; text-shadow: 0 2px 10px rgba(0,0,0,.5); }
+.kc-welcome-tile.has-img .ar { color: rgba(255,255,255,.85); }
 
-.kc-welcome-modal { position: absolute; inset: 0; z-index: 60; display: flex; align-items: flex-end; justify-content: center;
-  background: rgba(8,8,10,.55); backdrop-filter: blur(3px); animation: kcAFade .2s ease both; padding: 0; }
-.kc-welcome-modal .sheet { position: relative; width: 100%; max-height: 88%; overflow-y: auto; background: var(--c-surface);
-  border-radius: 26px 26px 0 0; padding: 22px 20px 26px; box-shadow: 0 -20px 60px -20px rgba(0,0,0,.5);
-  animation: kcSheetUp .34s cubic-bezier(.16,1,.3,1) both; scrollbar-width: none; }
+/* Popup AU CENTRE, arrière-plan figé + flouté */
+.kc-welcome-modal { position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center;
+  background: rgba(8,8,10,.62); backdrop-filter: blur(7px); -webkit-backdrop-filter: blur(7px); animation: kcAFade .2s ease both; padding: 22px; }
+.ed-phone-scroll .kc-welcome-modal { position: absolute; padding: 16px; }
+.kc-welcome-modal .sheet { position: relative; width: 100%; max-width: 400px; max-height: 84vh; overflow-y: auto; background: var(--c-surface);
+  border-radius: 24px; padding: 24px 22px; box-shadow: 0 40px 90px -30px rgba(0,0,0,.7);
+  animation: kcPopIn .3s cubic-bezier(.34,1.56,.64,1) both; scrollbar-width: none; }
+.ed-phone-scroll .kc-welcome-modal .sheet { max-height: 90%; }
 .kc-welcome-modal .sheet::-webkit-scrollbar { display: none; }
-@keyframes kcSheetUp { from { transform: translateY(100%); } to { transform: none; } }
-.kc-welcome-modal .sheet::before { content: ""; position: absolute; top: 9px; left: 50%; transform: translateX(-50%);
-  width: 42px; height: 5px; border-radius: 999px; background: var(--c-line); }
+@keyframes kcPopIn { from { opacity: 0; transform: scale(.9) translateY(10px); } to { opacity: 1; transform: none; } }
 .kc-welcome-modal .close { position: absolute; top: 16px; right: 16px; width: 30px; height: 30px; border-radius: 50%;
   border: none; background: var(--c-bg); color: var(--c-ink); font-size: 14px; cursor: pointer; z-index: 2; }
 .kc-welcome-modal .hd { display: flex; align-items: center; gap: 11px; margin: 12px 0 14px; }
@@ -1351,3 +1404,138 @@ textarea.in { resize: vertical; min-height: 58px; }
 .kc-welcome-modal .vid { width: 100%; aspect-ratio: 16/9; border: none; border-radius: 16px; display: block; margin-bottom: 14px; }
 .kc-welcome-modal .img { width: 100%; height: auto; border-radius: 16px; display: block; margin-bottom: 14px; }
 .kc-welcome-modal .desc { font-size: 14.5px; line-height: 1.62; color: var(--c-ink); white-space: pre-line; }
+
+/* ===================================================================
+   ÉDITEUR — Grille de sélection des modèles (Partir d'un modèle)
+   =================================================================== */
+.ed-tpl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.ed-tpl { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; text-align: left;
+  padding: 16px 15px; border-radius: 16px; border: 1px solid var(--line); background: var(--panel2);
+  cursor: pointer; transition: transform .16s cubic-bezier(.34,1.56,.64,1), border-color .16s, box-shadow .16s; font-family: inherit; }
+.ed-tpl:hover { transform: translateY(-3px); border-color: #E8A800; box-shadow: 0 14px 30px -16px rgba(232,168,0,.55); }
+.ed-tpl .em { font-size: 30px; line-height: 1; margin-bottom: 4px; }
+.ed-tpl .nm { font-size: 14.5px; font-weight: 800; color: var(--txt); }
+.ed-tpl .ni { font-size: 12px; color: var(--muted); }
+.ed-tpl .ct { font-size: 11px; font-weight: 700; color: #E8A800; margin-top: 4px; }
+
+/* ===================================================================
+   ADMIN — Choix du modèle à la création d'un workspace
+   =================================================================== */
+.ws-tpl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 9px; max-height: 320px; overflow-y: auto; padding: 2px; }
+.ws-tpl { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; padding: 12px 13px;
+  border-radius: 13px; border: 1.5px solid var(--line); background: var(--panel2); cursor: pointer; transition: border-color .15s, transform .15s, box-shadow .15s; font-family: inherit; }
+.ws-tpl:hover { transform: translateY(-2px); border-color: #E8C84A; }
+.ws-tpl.on { border-color: #E8A800; background: #FFF7D6; box-shadow: 0 6px 16px -8px rgba(232,168,0,.5); }
+.ws-tpl .em { font-size: 24px; line-height: 1; margin-bottom: 3px; }
+.ws-tpl .nm { font-size: 13.5px; font-weight: 800; color: var(--txt); line-height: 1.15; }
+.ws-tpl .ni { font-size: 11px; color: var(--muted); }
+
+/* ===================================================================
+   LIVRET — indice « cliquez ici » premium minimaliste sur les tuiles
+   =================================================================== */
+/* le chevron avance/recule doucement en boucle → signale qu'on peut appuyer */
+.kc-welcome-tile .ar { animation: kcNudge 2.4s ease-in-out infinite; }
+@keyframes kcNudge { 0%, 100% { transform: translateX(0); opacity: .5; } 50% { transform: translateX(5px); opacity: 1; } }
+/* halo d'accent qui pulse très légèrement autour de la tuile */
+.kc-welcome-tile::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--c-accent) 45%, transparent);
+  animation: kcTapRing 2.8s ease-out infinite;
+}
+.kc-welcome-tile.has-img::after { display: none; }
+@keyframes kcTapRing { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--c-accent) 40%, transparent); } 70%, 100% { box-shadow: 0 0 0 8px transparent; } }
+/* petit doigt « 👆 » qui apparaît sur la 1re tuile pour amorcer le geste */
+.kc-welcome-grid .kc-welcome-tile:first-child .lb::after {
+  content: " 👆"; display: inline-block; animation: kcTapFinger 2.2s ease-in-out infinite; }
+@keyframes kcTapFinger { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+/* respecte les utilisateurs qui coupent les animations */
+@media (prefers-reduced-motion: reduce) {
+  .kc-welcome-tile .ar, .kc-welcome-tile::after, .kc-welcome-grid .kc-welcome-tile:first-child .lb::after { animation: none; }
+}
+
+/* Badge de notification (nouveaux messages) dans le back-office client */
+.cl-badge { margin-left: auto; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px;
+  background: #E5484D; color: #fff; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 0 0 rgba(229,72,77,.5); animation: clPulse 1.8s infinite; }
+@keyframes clPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(229,72,77,.5); } 50% { box-shadow: 0 0 0 6px rgba(229,72,77,0); } }
+
+/* Taille de texte réglable par bloc (curseur « Taille du texte ») */
+.kc-sec--tscale .kc-sec-title { font-size: calc(17px * var(--kc-tscale, 1)); }
+.kc-sec--tscale p { font-size: calc(13.5px * var(--kc-tscale, 1)); }
+
+/* Alignement par bloc — le titre est en flex (barre d'accent), on ajuste sa justification */
+.kc-al-center { text-align: center; }
+.kc-al-right  { text-align: right; }
+.kc-al-left   { text-align: left; }
+.kc-al-center .kc-sec-title { justify-content: center; }
+.kc-al-right  .kc-sec-title { justify-content: flex-end; }
+.kc-al-left   .kc-sec-title { justify-content: flex-start; }
+
+/* Placement des réseaux sociaux selon l'alignement du bloc (gauche / centre / droite) */
+.kc-al-left  .kc-social-glass { justify-content: flex-start; }
+.kc-al-right .kc-social-glass { justify-content: flex-end; }
+.kc-al-center .kc-social-glass { justify-content: center; }
+
+/* Placement des réseaux sociaux selon l'alignement du bloc */
+.kc-al-left  .kc-social-glass { justify-content: flex-start; }
+.kc-al-right .kc-social-glass { justify-content: flex-end; }
+.kc-al-center .kc-social-glass { justify-content: center; }
+
+/* ===================================================================
+   BLOC GOOGLE MAPS — cadre premium + bouton itinéraire flottant
+   =================================================================== */
+.kc-maps .frame { position: relative; width: 100%; border-radius: 20px; overflow: hidden;
+  border: 1px solid var(--c-line); box-shadow: 0 18px 40px -22px rgba(10,10,12,.4), 0 1px 0 rgba(255,255,255,.6) inset; background: var(--c-bg); }
+.kc-maps .frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: block; filter: saturate(1.05); }
+.kc-maps .frame .go { position: absolute; right: 12px; bottom: 12px; z-index: 2; display: inline-flex; align-items: center; gap: 7px;
+  padding: 10px 15px; border-radius: 999px; text-decoration: none; font-size: 13px; font-weight: 800;
+  background: linear-gradient(135deg, var(--c-accent), var(--c-accent2)); color: var(--c-accent-ink);
+  box-shadow: 0 10px 24px -8px color-mix(in srgb, var(--c-accent) 70%, transparent), inset 0 1px 0 rgba(255,255,255,.4); }
+.kc-maps .frame .go .pin { display: inline-block; transform: rotate(0deg); }
+.kc-maps .frame .go:active { transform: scale(.96); }
+.kc-maps .info { display: flex; gap: 11px; align-items: flex-start; margin-top: 11px; padding: 12px 14px; border-radius: 14px;
+  background: var(--c-bg); border: 1px solid var(--c-line); }
+.kc-maps .info .ic { font-size: 18px; line-height: 1.4; }
+.kc-maps .info b { display: block; font-size: 13.5px; }
+.kc-maps .info small { display: block; font-size: 12px; color: var(--c-soft); margin-top: 2px; line-height: 1.45; }
+
+/* ===================================================================
+   PROFIL (hero) — coordonnées chic + bouton « Enregistrer le contact »
+   =================================================================== */
+.kc-hero-contact { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+.kc-hero-contact .row { display: inline-flex; align-items: center; gap: 10px; width: fit-content; max-width: 100%;
+  padding: 9px 14px; border-radius: 999px; text-decoration: none; color: #fff; font-size: 13.5px; font-weight: 600;
+  background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.24); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 8px 22px -12px rgba(0,0,0,.5); transition: background .18s, transform .18s; }
+.kc-hero-contact .row:hover { background: rgba(255,255,255,.24); transform: translateY(-1px); }
+.kc-hero-contact .row .ic { font-size: 15px; flex-shrink: 0; }
+.kc-hero-contact .row .tx { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kc-hero-save { margin-top: 14px; width: 100%; padding: 14px 16px; border: none; cursor: pointer; border-radius: 15px;
+  font-family: var(--font-display), sans-serif; font-size: 14.5px; font-weight: 800; color: var(--c-accent-ink);
+  background: linear-gradient(135deg, var(--c-accent), var(--c-accent2));
+  box-shadow: 0 14px 30px -10px color-mix(in srgb, var(--c-accent) 70%, transparent), inset 0 1px 0 rgba(255,255,255,.4);
+  transition: transform .16s ease; }
+.kc-hero-save:hover { transform: translateY(-2px); }
+.kc-hero-save:active { transform: scale(.98); }
+
+/* ===================================================================
+   CARROUSEL — défilement horizontal, option "taille originale" pleine largeur
+   =================================================================== */
+.kc-carousel { display: flex; gap: 9px; overflow-x: auto; scroll-snap-type: x mandatory; margin: 0 -3px; padding: 2px 3px; scrollbar-width: none; }
+.kc-carousel::-webkit-scrollbar { display: none; }
+.kc-carousel .slide { flex: 0 0 auto; display: block; scroll-snap-align: center; }
+.kc-carousel.orig .slide { flex: 0 0 100%; width: 100%; }
+
+/* ===================================================================
+   MODE IMAGE DE FOND — image d'ambiance derrière toute la carte + voile
+   =================================================================== */
+.kc--bgimg { background-size: cover; background-position: center; background-attachment: scroll; }
+.kc-bg-ov { position: absolute; inset: 0; z-index: 1; pointer-events: none; background: #07080b; }
+.kc--bgimg .kc-hero, .kc--bgimg .kc-body { position: relative; z-index: 2; }
+/* les sections deviennent du verre translucide → l'image d'ambiance transparaît */
+.kc--bgimg .kc-sec:not(.kc-sec--flush) {
+  background: color-mix(in srgb, var(--c-surface) 78%, transparent);
+  backdrop-filter: blur(9px); -webkit-backdrop-filter: blur(9px);
+  border-color: rgba(255,255,255,.18);
+}
+.kc--bgimg .kc-hero::after { display: none; }

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Icon from "@/components/Icon";
 import AdminHeader from "@/components/AdminHeader";
 import ImageInput from "@/components/ImageInput";
+import ConfirmModal from "@/components/ConfirmModal";
 import {
   listClients, createClientAccount, updateClientAccount, deleteClientAccount, listWorkspaces,
   PLANS, planQuota, type Client, type Workspace, type PlanKey,
@@ -15,6 +16,7 @@ export default function ClientsPage() {
   const [toast, setToast] = useState("");
   const [reveal, setReveal] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [toDelete, setToDelete] = useState<Client | null>(null);
 
   const refresh = () => { void (async () => { setClients(await listClients()); setWss(await listWorkspaces()); })(); };
   useEffect(refresh, []);
@@ -85,7 +87,7 @@ export default function ClientsPage() {
                       title="Envoyer les accès par email">
                       <Icon name="export" size={14} /> Envoyer les accès
                     </a>
-                    <button className="a-btn a-btn-sm a-btn-danger" onClick={() => { if (confirm(`Supprimer ${c.company} ?`)) { void deleteClientAccount(c.id).then(() => { refresh(); notify("Client supprimé"); }); } }}>
+                    <button className="a-btn a-btn-sm a-btn-danger" onClick={() => setToDelete(c)} title="Supprimer ce client">
                       <Icon name="trash" size={15} />
                     </button>
                   </td>
@@ -102,6 +104,17 @@ export default function ClientsPage() {
       </div>
 
       {open && <ClientModal onClose={() => setOpen(false)} onCreated={() => { refresh(); notify("Client créé — identifiants prêts à envoyer"); }} />}
+      {toDelete && (
+        <ConfirmModal
+          message={`Supprimer le client « ${toDelete.company} » et retirer son accès au back-office ?`}
+          onCancel={() => setToDelete(null)}
+          onConfirm={() => {
+            const id = toDelete.id;
+            setToDelete(null);
+            void deleteClientAccount(id).then(() => { refresh(); notify("Client supprimé"); });
+          }}
+        />
+      )}
       {toast && <div className="a-toast"><Icon name="check" size={16} /> {toast}</div>}
     </div>
   );

@@ -6,7 +6,8 @@ import Link from "next/link";
 import type { Card, Block } from "@/lib/types";
 import { THEMES, CARD_THEMES, CARD_FONTS, cardTheme, type CardCustom } from "@/lib/types";
 import { BLOCK_DEFS, BLOCK_MAP, type Field, type SubField } from "@/lib/blocks";
-import { newBlock } from "@/lib/store";
+import { newBlock, uid } from "@/lib/store";
+import { TEMPLATES, templateBlocks, type CardTemplate } from "@/lib/templates";
 import { saveCard } from "@/lib/db";
 import type { Permissions } from "@/lib/admin-store";
 import CardRenderer from "./CardRenderer";
@@ -25,8 +26,20 @@ export default function Editor({ initial, perms = FULL, backHref = "/dashboard",
   const [card, setCard] = useState<Card>(initial);
   const [sel, setSel] = useState<Sel>(card.blocks[0]?.id ?? (perms.editStructure ? "style" : null));
   const [adding, setAdding] = useState(false);
+  const [picking, setPicking] = useState(false);
+  const [tplConfirm, setTplConfirm] = useState<CardTemplate | null>(null);
   const [toDelete, setToDelete] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+
+  /** Applique un modèle : remplace les blocs + le thème de la carte courante (garde id/slug). */
+  function applyTemplate(tpl: CardTemplate) {
+    if (!perms.editStructure) return;
+    const blocks = templateBlocks(tpl, uid);
+    commit({ ...card, themeIndex: tpl.themeIndex, custom: undefined, blocks });
+    setSel(blocks[0]?.id ?? null);
+    setPicking(false);
+    setTplConfirm(null);
+  }
 
   function saveNow() {
     void import("@/lib/admin-db").then((m) => m.syncWorkspaceSlug(card.id, card.slug)).catch(() => {});
@@ -187,6 +200,11 @@ export default function Editor({ initial, perms = FULL, backHref = "/dashboard",
               + Ajouter une section
             </button>
           )}
+          {perms.editStructure && (
+            <button className="btn" style={{ justifyContent: "center", padding: 11, marginTop: 4, fontWeight: 700 }} onClick={() => setPicking(true)}>
+              ✨ Partir d&apos;un modèle
+            </button>
+          )}
         </div>
 
         {/* ===== Colonne centrale : aperçu live ===== */}
@@ -313,9 +331,51 @@ export default function Editor({ initial, perms = FULL, backHref = "/dashboard",
                   </label>
                 </div>
                 <div style={{ gridColumn: "1/-1" }}>
+                  <label className="lbl">Hauteur de la bannière / profil : {card.custom?.heroHeight ?? 280}px</label>
+                  <input type="range" min={200} max={620} step={10} value={card.custom?.heroHeight ?? 280}
+                    onChange={(e) => setCustom({ heroHeight: Number(e.target.value) })} style={{ width: "100%", accentColor: "#E8A800" }} />
+                </div>
+                <div style={{ gridColumn: "1/-1" }}>
+                  <label className="lbl">🖼 Image de fond de toute la carte (optionnel)</label>
+                  <ImageInput value={card.custom?.bgImage ?? ""} onChange={(v) => setCustom({ bgImage: v })}
+                    placeholder="Image d'ambiance affichée derrière tous les blocs" />
+                </div>
+                {card.custom?.bgImage && (
+                  <div style={{ gridColumn: "1/-1" }}>
+                    <label className="lbl">Voile sombre sur l&apos;image de fond : {card.custom?.bgOverlay ?? 45}%</label>
+                    <input type="range" min={0} max={100} value={card.custom?.bgOverlay ?? 45}
+                      onChange={(e) => setCustom({ bgOverlay: Number(e.target.value) })} style={{ width: "100%", accentColor: "#E8A800" }} />
+                  </div>
+                )}
+                <div style={{ gridColumn: "1/-1" }}>
                   <label className="lbl">Voile du hero (lisibilité des textes) : {card.custom?.overlay ?? 100}%</label>
                   <input type="range" min={0} max={100} value={card.custom?.overlay ?? 100}
                     onChange={(e) => setCustom({ overlay: Number(e.target.value) })} style={{ width: "100%", accentColor: "#E8A800" }} />
+                </div>
+                <div style={{ gridColumn: "1/-1" }}>
+                  <label className="lbl">Logo au centre du QR code</label>
+                  <ImageInput value={card.custom?.qrLogo ?? ""}
+                    onChange={(v) => setCustom({ qrLogo: v })}
+                    placeholder="Logo à afficher au centre du QR" />
+                  <p style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 4 }}>
+                    Sans logo choisi ici, on utilise l&apos;avatar/photo de la carte, sinon le logo Bazookard.
+                  </p>
+                  <label style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 12.5, color: "var(--muted)", cursor: "pointer", marginTop: 8 }}>
+                    <input type="checkbox" checked={card.custom?.hideQr === true}
+                      onChange={(e) => setCustom({ hideQr: e.target.checked })} style={{ accentColor: "#E8A800" }} />
+                    Masquer le QR code
+                  </label>
+                </div>
+                <div style={{ gridColumn: "1/-1" }}>
+                  <label className="lbl">Mention « Propulsé par » (bas de carte)</label>
+                  <input className="in" value={card.custom?.credit ?? "Bazookard"}
+                    placeholder="Bazookard"
+                    onChange={(e) => setCustom({ credit: e.target.value })} />
+                  <label style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 12.5, color: "var(--muted)", cursor: "pointer", marginTop: 8 }}>
+                    <input type="checkbox" checked={card.custom?.hideCredit === true}
+                      onChange={(e) => setCustom({ hideCredit: e.target.checked })} style={{ accentColor: "#E8A800" }} />
+                    Masquer complètement la mention
+                  </label>
                 </div>
               </div>
             </div>
@@ -350,6 +410,27 @@ export default function Editor({ initial, perms = FULL, backHref = "/dashboard",
                   </button>
                 )}
 
+                {def.type === "video" && (
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px 12px" }}>
+                    <div>
+                      <label className="lbl">Ombre de la vidéo</label>
+                      <select className="in" value={String((selBlock.data as Dict).__shadow ?? "")} disabled={!perms.editText}
+                        onChange={(e) => updateBlock(selBlock.id, { ...(selBlock.data as Dict), __shadow: e.target.value })}>
+                        <option value="">Automatique</option>
+                        <option value="aucune">Aucune</option>
+                        <option value="douce">Douce</option>
+                        <option value="forte">Forte</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="lbl">Arrondi des bords : {Number((selBlock.data as Dict).__radius ?? 20)}px</label>
+                      <input type="range" min={0} max={40} value={Number((selBlock.data as Dict).__radius ?? 20)} disabled={!perms.editText}
+                        onChange={(e) => updateBlock(selBlock.id, { ...(selBlock.data as Dict), __radius: Number(e.target.value) })}
+                        style={{ width: "100%", accentColor: "#E8A800" }} />
+                    </div>
+                  </div>
+                )}
+
                 {["gallery", "carousel", "media", "events", "offers", "product", "around", "equipment"].includes(def.type) && (
                   <div>
                     <label className="lbl">🖼 Format des images de ce bloc</label>
@@ -376,6 +457,51 @@ export default function Editor({ initial, perms = FULL, backHref = "/dashboard",
                     <option value="rebond">Rebond</option>
                     <option value="aucune">Aucune</option>
                   </select>
+                </div>
+
+                {/* Réglages texte & espacement propres à ce bloc */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px 12px" }}>
+                  <div>
+                    <label className="lbl">Alignement du texte</label>
+                    <select className="in" value={String((selBlock.data as Dict).__align ?? "")} disabled={!perms.editText}
+                      onChange={(e) => updateBlock(selBlock.id, { ...(selBlock.data as Dict), __align: e.target.value })}>
+                      <option value="">Automatique</option>
+                      <option value="left">À gauche</option>
+                      <option value="center">Centré</option>
+                      <option value="right">À droite</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="lbl">Taille du texte</label>
+                    <select className="in" value={String((selBlock.data as Dict).__textSize ?? "")} disabled={!perms.editText}
+                      onChange={(e) => updateBlock(selBlock.id, { ...(selBlock.data as Dict), __textSize: e.target.value })}>
+                      <option value="">Normale</option>
+                      <option value="s">Petite</option>
+                      <option value="l">Grande</option>
+                      <option value="xl">Très grande</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="lbl">Police du bloc</label>
+                    <select className="in" value={String((selBlock.data as Dict).__font ?? "")} disabled={!perms.editText}
+                      onChange={(e) => updateBlock(selBlock.id, { ...(selBlock.data as Dict), __font: e.target.value })}>
+                      <option value="">Automatique (globale)</option>
+                      {Object.entries(CARD_FONTS).map(([k, f]) => <option key={k} value={k}>{f.label}</option>)}
+                    </select>
+                  </div>
+                  <div />
+                  <div>
+                    <label className="lbl">Marge en haut : {Number((selBlock.data as Dict).__mt ?? 0)}px</label>
+                    <input type="range" min={0} max={60} value={Number((selBlock.data as Dict).__mt ?? 0)} disabled={!perms.editText}
+                      onChange={(e) => updateBlock(selBlock.id, { ...(selBlock.data as Dict), __mt: Number(e.target.value) })}
+                      style={{ width: "100%", accentColor: "#E8A800" }} />
+                  </div>
+                  <div>
+                    <label className="lbl">Marge en bas : {Number((selBlock.data as Dict).__mb ?? 0)}px</label>
+                    <input type="range" min={0} max={60} value={Number((selBlock.data as Dict).__mb ?? 0)} disabled={!perms.editText}
+                      onChange={(e) => updateBlock(selBlock.id, { ...(selBlock.data as Dict), __mb: Number(e.target.value) })}
+                      style={{ width: "100%", accentColor: "#E8A800" }} />
+                  </div>
                 </div>
 
                 {perms.editStructure && (
@@ -409,6 +535,39 @@ export default function Editor({ initial, perms = FULL, backHref = "/dashboard",
             <AddPanel onPick={addBlock} />
           </div>
         </div>
+      )}
+
+      {/* ===== Choix d'un modèle (modal) ===== */}
+      {picking && (
+        <div className="ed-cat-overlay" onClick={() => setPicking(false)}>
+          <div className="ed-cat" style={{ maxWidth: 860 }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+              <strong style={{ fontSize: 17 }}>✨ Partir d&apos;un modèle</strong>
+              <button onClick={() => setPicking(false)} style={mini}>✕</button>
+            </div>
+            <p style={{ color: "var(--muted)", fontSize: 13, marginBottom: 16 }}>
+              Choisissez un modèle métier : ses sections remplacent le contenu actuel. Vous pourrez ensuite tout modifier.
+            </p>
+            <div className="ed-tpl-grid">
+              {TEMPLATES.map((t) => (
+                <button key={t.id} className="ed-tpl" onClick={() => setTplConfirm(t)}>
+                  <span className="em">{t.emoji}</span>
+                  <span className="nm">{t.name}</span>
+                  <span className="ni">{t.niche}</span>
+                  <span className="ct">{t.blocks.length} sections</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {tplConfirm && (
+        <ConfirmModal dark
+          message={`Appliquer le modèle « ${tplConfirm.name} » ? Les sections actuelles seront remplacées.`}
+          onCancel={() => setTplConfirm(null)}
+          onConfirm={() => applyTemplate(tplConfirm)}
+        />
       )}
     </div>
   );
@@ -522,7 +681,7 @@ function FieldInput({ field, value, onChange, disabled = false }: {
                 onClick={() => onChange([...items, Object.fromEntries(sub.map((sf) => [sf.key, ""]))])}>
                 {field.addLabel ?? "+ Ajouter"}
               </button>
-              {sub.length === 1 && sub[0].type === "image" && (
+              {sub[0]?.type === "image" && (
                 <label className="btn" style={{ justifyContent: "center", cursor: "pointer" }}>
                   📷 Ajouter plusieurs images
                   <input type="file" accept="image/*" multiple hidden

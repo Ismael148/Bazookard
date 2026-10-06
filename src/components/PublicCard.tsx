@@ -6,7 +6,7 @@ import { cardTheme, resolveTheme } from "@/lib/types";
 import { getCardBySlug } from "@/lib/db";
 import CardRenderer from "./CardRenderer";
 import { trackEvent } from "@/lib/tracking";
-import { LogoMark, LogoImg } from "@/components/Logo";
+import { LogoMark } from "@/components/Logo";
 
 type Dict = Record<string, unknown>;
 
@@ -29,7 +29,8 @@ export default function PublicCard({ slug }: { slug: string }) {
   useEffect(() => {
     if (!card) return;
     const ink = resolveTheme(card).ink;
-    QRCode.toDataURL(window.location.href, { width: 320, margin: 1, color: { dark: ink, light: "#ffffff" } })
+    // niveau H : tolère le logo au centre sans casser la lecture du QR
+    QRCode.toDataURL(window.location.href, { width: 320, margin: 1, errorCorrectionLevel: "H", color: { dark: ink, light: "#ffffff" } })
       .then(setQr).catch(() => {});
   }, [card]);
 
@@ -37,6 +38,12 @@ export default function PublicCard({ slug }: { slug: string }) {
   if (card === null) return <Center>Carte introuvable. <br />Crée-la depuis le tableau de bord.</Center>;
 
   const t = cardTheme(card.themeIndex);
+  // Logo affiché au centre du QR : avatar dédié, sinon photo de profil
+  const avatarData = card.blocks.find((b) => b.type === "avatar")?.data as Dict | undefined;
+  const profileData = card.blocks.find((b) => b.type === "profile")?.data as Dict | undefined;
+  const qrLogo = (typeof card.custom?.qrLogo === "string" ? card.custom.qrLogo : "")
+    || (avatarData && typeof avatarData.image === "string" ? avatarData.image : "")
+    || (profileData && typeof profileData.photo === "string" ? profileData.photo : "");
   const chatbot = card.blocks.find((b) => b.type === "chatbot")?.data as Dict | undefined;
   const cs = (k: string) => (chatbot && typeof chatbot[k] === "string" ? (chatbot[k] as string) : "");
   const greeting = cs("greeting");
@@ -50,11 +57,15 @@ export default function PublicCard({ slug }: { slug: string }) {
     const contact = card.blocks.find((b) => b.type === "contact")?.data as Dict | undefined;
     const g = (o: Dict | undefined, k: string) => (o && typeof o[k] === "string" ? (o[k] as string) : "");
     const name = g(profile, "name") || card.title;
+    const phone = g(profile, "phone") || g(contact, "phone");
+    const email = g(profile, "email") || g(contact, "email");
+    const addr = g(profile, "address") || g(contact, "address");
     const v = ["BEGIN:VCARD", "VERSION:3.0", `N:${name}`, `FN:${name}`,
       g(profile, "company") && `ORG:${g(profile, "company")}`,
       g(profile, "title") && `TITLE:${g(profile, "title")}`,
-      g(contact, "phone") && `TEL;TYPE=CELL:${g(contact, "phone")}`,
-      g(contact, "email") && `EMAIL:${g(contact, "email")}`,
+      phone && `TEL;TYPE=CELL:${phone}`,
+      email && `EMAIL:${email}`,
+      addr && `ADR;TYPE=WORK:;;${addr.replace(/,/g, ";")};;;;`,
       g(contact, "website") && `URL:${g(contact, "website")}`,
       "END:VCARD"].filter(Boolean).join("\n");
     const a = document.createElement("a");
@@ -116,19 +127,28 @@ export default function PublicCard({ slug }: { slug: string }) {
 
         {/* QR + signature */}
         <div style={{ padding: "0 14px 26px", background: t.bg }}>
-          {qr && (
-            <div style={{ textAlign: "center", background: t.surface, border: `1px solid ${t.line}`, borderRadius: 20, padding: 18 }}>
-              <img src={qr} alt="QR" width={132} height={132} style={{ borderRadius: 12, display: "block", margin: "0 auto" }} />
-              <div style={{ color: t.soft, fontSize: 11.5, marginTop: 8 }}>Scannez pour partager cette carte</div>
+          {qr && !card.custom?.hideQr && (
+            <div style={{ textAlign: "center", background: t.surface, border: `2px solid ${t.accent}`, borderRadius: 20, padding: 18, boxShadow: `0 14px 32px -18px ${t.accent}` }}>
+              <div style={{ position: "relative", width: 138, height: 138, margin: "0 auto" }}>
+                <img src={qr} alt="QR" width={138} height={138} style={{ borderRadius: 14, display: "block" }} />
+                {/* Logo au centre du QR */}
+                <span style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 38, height: 38, borderRadius: 11, background: "#fff", display: "grid", placeItems: "center", boxShadow: "0 2px 8px rgba(0,0,0,.25)", overflow: "hidden" }}>
+                  {qrLogo
+                    ? <span style={{ width: "100%", height: "100%", backgroundImage: `url('${qrLogo}')`, backgroundSize: "cover", backgroundPosition: "center" }} />
+                    : <LogoMark size={26} ink="#17140C" accent={t.accent} />}
+                </span>
+              </div>
+              <div style={{ color: t.soft, fontSize: 11.5, marginTop: 10, fontWeight: 600 }}>Scannez pour partager cette carte</div>
             </div>
           )}
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, color: t.soft, fontSize: 12, marginTop: 16 }}>
-            {!t.dark && <span style={{ background: "#fff", borderRadius: 12, padding: "6px 12px" }}><LogoImg h={40} /></span>}
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-              {t.dark && <LogoMark size={18} ink={t.ink} />} Propulsé par <strong style={{ color: t.ink }}>KARTE</strong>
-            </span>
-            <span style={{ fontSize: 10.5, opacity: .8 }}>by Adamkom &amp; JJP</span>
-          </div>
+          {!card.custom?.hideCredit && (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, color: t.soft, fontSize: 12, marginTop: 16 }}>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                {t.dark && <LogoMark size={18} ink={t.ink} />} Propulsé par <strong style={{ color: t.ink }}>{card.custom?.credit || "Bazookard"}</strong>
+              </span>
+              {!(card.custom?.credit) && <span style={{ fontSize: 10.5, opacity: .8 }}>by Adamkom &amp; JJP</span>}
+            </div>
+          )}
         </div>
 
         {/* Panneau chatbot (v1 : accueil — le RAG arrive en Phase IA) */}

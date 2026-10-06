@@ -11,6 +11,9 @@ import {
   listClients, ensureWorkspaceCard, planQuota,
   type Workspace, type Client, type Permissions,
 } from "@/lib/admin-db";
+import { TEMPLATES, templateBlocks, type CardTemplate } from "@/lib/templates";
+import { uid } from "@/lib/store";
+import { saveCard } from "@/lib/db";
 
 const PERM_LABELS: { key: keyof Permissions; label: string }[] = [
   { key: "editText", label: "Éditer textes & images" },
@@ -140,28 +143,66 @@ export default function WorkspacesPage() {
 function WsModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
+  const [tplId, setTplId] = useState<string>("");   // "" = carte vierge
+  const [busy, setBusy] = useState(false);
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!name) return;
-    await createWorkspace(name, slug);
-    onCreated();
-    onClose();
+    if (!name || busy) return;
+    setBusy(true);
+    try {
+      const w = await createWorkspace(name, slug);
+      if (!w) { alert("Impossible de créer le workspace."); return; }
+      // Crée (et lie) la carte du workspace
+      const card = await ensureWorkspaceCard(w);
+      // Applique le modèle choisi (blocs + thème) si ce n'est pas une carte vierge
+      const tpl: CardTemplate | undefined = TEMPLATES.find((t) => t.id === tplId);
+      if (card && tpl) {
+        card.themeIndex = tpl.themeIndex;
+        card.blocks = templateBlocks(tpl, uid);
+        await saveCard(card);
+      }
+      onCreated();
+      onClose();
+    } finally { setBusy(false); }
   }
+
   return (
     <div className="a-overlay" onClick={onClose}>
-      <div className="a-modal" onClick={(e) => e.stopPropagation()}>
+      <div className="a-modal" style={{ maxWidth: 640 }} onClick={(e) => e.stopPropagation()}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
           <h3 style={{ fontSize: 18, fontWeight: 700 }}>Nouveau workspace</h3>
           <button className="a-btn a-btn-sm" style={{ padding: 6 }} onClick={onClose}><Icon name="x" size={16} /></button>
         </div>
         <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <div><label className="a-label">Nom du workspace</label><input className="a-input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Carte — Mon client" required /></div>
+          <div><label className="a-label">Nom du workspace / client</label><input className="a-input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Carte — Mon client" required autoFocus /></div>
           <div><label className="a-label">Lien public (slug)</label>
             <div style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--muted)", fontSize: 14 }}>/
               <input className="a-input" value={slug} onChange={(e) => setSlug(e.target.value.replace(/[^a-z0-9-]/gi, "-").toLowerCase())} placeholder="mon-client" />
             </div>
           </div>
-          <button className="a-btn a-btn-primary" style={{ justifyContent: "center" }} type="submit">Créer le workspace</button>
+
+          <div>
+            <label className="a-label">Choisir un modèle</label>
+            <div className="ws-tpl-grid">
+              <button type="button" className={`ws-tpl${tplId === "" ? " on" : ""}`} onClick={() => setTplId("")}>
+                <span className="em">➕</span>
+                <span className="nm">Carte vierge</span>
+                <span className="ni">Partir de zéro</span>
+              </button>
+              {TEMPLATES.map((t) => (
+                <button type="button" key={t.id} className={`ws-tpl${tplId === t.id ? " on" : ""}`} onClick={() => setTplId(t.id)}>
+                  <span className="em">{t.emoji}</span>
+                  <span className="nm">{t.name}</span>
+                  <span className="ni">{t.niche}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <button className="a-btn a-btn-primary" style={{ justifyContent: "center" }} type="submit" disabled={busy}>
+            {busy ? "Création…" : "Créer le workspace"}
+          </button>
         </form>
       </div>
     </div>

@@ -31,7 +31,7 @@ begin
         'lead', count(*) filter (where a.event = 'lead')
       ) from analytics a where a.card_id = cd.id),
       'leads', (select coalesce(jsonb_agg(jsonb_build_object(
-        'name', coalesce(l.name, ''), 'contact', coalesce(l.email, l.phone, ''),
+        'id', l.id, 'name', coalesce(l.name, ''), 'contact', coalesce(l.email, l.phone, ''),
         'ts', (extract(epoch from l.created_at) * 1000)::bigint
       ) order by l.created_at desc), '[]'::jsonb)
         from (select * from leads where card_id = cd.id order by created_at desc limit 20) l)
@@ -104,3 +104,42 @@ grant execute on function public.client_daily_stats(text, text, integer) to anon
 
 -- ---------- Localisation des visiteurs (rapports par région) ----------
 alter table public.analytics add column if not exists region text;
+
+-- ============================================================
+--  FIX LEADS — enregistrement fiable des messages/inscriptions
+--  (contourne les RLS : le visiteur public n'a pas de session)
+-- ============================================================
+create or replace function public.save_lead(p_card uuid, p_name text, p_email text, p_phone text)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  insert into public.leads (card_id, name, email, phone, source)
+  values (p_card, nullif(p_name, ''), nullif(p_email, ''), nullif(p_phone, ''), 'carte');
+end $$;
+
+grant execute on function public.save_lead(uuid, text, text, text) to anon, authenticated;
+
+-- Sécurise aussi l'insertion directe (repli) : autorise l'ajout par tous
+drop policy if exists "leads: anyone insert" on public.leads;
+create policy "leads: anyone insert" on public.leads for insert with check (true);
+
+-- ============================================================
+--  Suppression d'un message/contact par le client (sécurisé)
+-- ============================================================
+create or replace function public.client_delete_lead(p_email text, p_password text, p_lead uuid)
+returns boolean language plpgsql security definer set search_path = public as $$
+declare ok boolean;
+begin
+  -- le client doit posséder (via un workspace) la carte à laquelle appartient ce lead
+  select true into ok
+  from leads ld
+  join workspaces w on w.card_id = ld.card_id
+  join clients c on c.id = w.client_id
+  where ld.id = p_lead
+    and lower(c.email) = lower(trim(p_email)) and c.password = p_password
+  limit 1;
+  if ok is null then return false; end if;
+  delete from leads where id = p_lead;
+  return true;
+end $$;
+
+grant execute on function public.client_delete_lead(text, text, uuid) to anon, authenticated;

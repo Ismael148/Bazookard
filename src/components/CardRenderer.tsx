@@ -55,8 +55,13 @@ function renderBlock(block: Block, cardId: string, custom?: Card["custom"]): Rea
           <div style={{ width: 92, height: 92, borderRadius: "50%", margin: "0 auto", backgroundImage: `url('${s(d.image)}')`, backgroundSize: "cover", backgroundPosition: "center" }} />
         </div>
       ) : null;
-    case "banner":
-      return s(d.image) ? <img src={s(d.image)} alt="" style={{ width: "100%", display: "block", borderRadius: 12 }} /> : null;
+    case "banner": {
+      if (!s(d.image)) return null;
+      const bimg = <img src={s(d.image)} alt="" style={{ width: "100%", display: "block", borderRadius: 12 }} />;
+      return s(d.url)
+        ? <a href={s(d.url)} target="_blank" rel="noopener" style={{ display: "block" }}>{bimg}</a>
+        : bimg;
+    }
     case "contact": {
       const tiles: React.ReactNode[] = [];
       if (s(d.phone)) tiles.push(<a key="p" className="kc-tile" href={`tel:${s(d.phone)}`}><span className="tic"><Glyph name="phone" size={20} /></span>Appeler</a>);
@@ -81,14 +86,15 @@ function renderBlock(block: Block, cardId: string, custom?: Card["custom"]): Rea
       );
     }
     case "button":
-      return s(d.label) ? <a href={s(d.url) || "#"} className="kc-cta">{s(d.label)}</a> : null;
+      // pas de lien → pas de bouton (on n'affiche rien d'inutile)
+      return s(d.label) && s(d.url) ? <a href={s(d.url)} className="kc-cta">{s(d.label)}</a> : null;
     case "social": {
       const items = arr(d.items).filter((i) => s(i.url));
       return items.length ? (
         <div className="kc-social-glass">
           {items.map((i, k) => (
-            <a key={k} href={s(i.url)} className="kc-social-pod" style={{ textDecoration: "none", animationDelay: `${k * 70}ms` }}>
-              <SocialIcon network={s(i.network)} color={s(i.color) || undefined} size={42} />
+            <a key={k} href={s(i.url)} className="kc-social-pod" target="_blank" rel="noopener" style={{ textDecoration: "none", animationDelay: `${k * 70}ms` }}>
+              <SocialIcon network={s(i.network)} color={s(i.color) || undefined} size={54} />
             </a>
           ))}
         </div>
@@ -101,43 +107,54 @@ function renderBlock(block: Block, cardId: string, custom?: Card["custom"]): Rea
           <p style={{ color: "var(--c-soft)", fontSize: 13.5, lineHeight: 1.5 }}>{s(d.text)}</p>
         </div>
       );
-    case "gallery":
+    case "gallery": {
+      // Une image devient cliquable si un lien est renseigné
+      const wrap = (node: React.ReactNode, url: string, k: number) =>
+        url ? <a key={k} href={url} target="_blank" rel="noopener" style={{ display: "block" }}>{node}</a> : <span key={k} style={{ display: "block" }}>{node}</span>;
       if (orig) {
-        // Format original : chaque image garde ses proportions, empilées pleine largeur
         return (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {arr(d.items).filter((i) => s(i.image)).map((i, k) => (
-              <img key={k} src={s(i.image)} alt="" style={{ width: "100%", height: "auto", display: "block", borderRadius: 12, boxShadow: imShadow }} />
-            ))}
+            {arr(d.items).filter((i) => s(i.image)).map((i, k) => wrap(
+              <img src={s(i.image)} alt="" style={{ width: "100%", height: "auto", display: "block", borderRadius: 12, boxShadow: imShadow }} />, s(i.url), k))}
           </div>
         );
       }
       return (
         <div style={{ display: "grid", gridTemplateColumns: `repeat(${galCols}, 1fr)`, gap: 7 }}>
-          {arr(d.items).filter((i) => s(i.image)).map((i, k) => (
-            <img key={k} src={s(i.image)} alt="" style={{ width: "100%", aspectRatio: bratio || (round ? "1" : ratio || "1"), objectFit: "cover", borderRadius: round ? "50%" : 10, boxShadow: imShadow }} />
-          ))}
+          {arr(d.items).filter((i) => s(i.image)).map((i, k) => wrap(
+            <img src={s(i.image)} alt="" style={{ width: "100%", aspectRatio: bratio || (round ? "1" : ratio || "1"), objectFit: "cover", borderRadius: round ? "50%" : 10, boxShadow: imShadow }} />, s(i.url), k))}
         </div>
       );
-    case "carousel":
+    }
+    case "carousel": {
+      // orig = image pleine largeur à sa taille naturelle (1 par vue, défilement).
+      const imgStyle = (): React.CSSProperties => orig
+        ? { width: "100%", height: "auto", objectFit: "contain", borderRadius: 14, display: "block", boxShadow: imShadow }
+        : round
+        ? { width: carH, height: carH, objectFit: "cover", borderRadius: "50%", flexShrink: 0, boxShadow: imShadow }
+        : { height: carH2, aspectRatio: bratio || (!ratio || ratio === "1" ? undefined : ratio), objectFit: "cover", borderRadius: 14, flexShrink: 0, boxShadow: imShadow };
       return (
-        <div style={{ display: "flex", gap: 9, overflowX: "auto", margin: "0 -4px", padding: "2px 4px" }}>
-          {arr(d.items).filter((i) => s(i.image)).map((i, k) => (
-            <img key={k} src={s(i.image)} alt=""
-              style={orig
-                ? { height: carH2, width: "auto", maxWidth: "88%", objectFit: "contain", borderRadius: 14, flexShrink: 0, boxShadow: imShadow }
-                : round
-                ? { width: carH, height: carH, objectFit: "cover", borderRadius: "50%", flexShrink: 0, boxShadow: imShadow }
-                : { height: carH2, aspectRatio: bratio || (!ratio || ratio === "1" ? undefined : ratio), objectFit: "cover", borderRadius: 14, flexShrink: 0, boxShadow: imShadow }} />
-          ))}
+        <div className={`kc-carousel${orig ? " orig" : ""}`}>
+          {arr(d.items).filter((i) => s(i.image)).map((i, k) => {
+            const img = <img src={s(i.image)} alt="" style={imgStyle()} />;
+            return s(i.url)
+              ? <a key={k} href={s(i.url)} target="_blank" rel="noopener" className="slide">{img}</a>
+              : <span key={k} className="slide">{img}</span>;
+          })}
         </div>
       );
+    }
     case "video": {
       const embed = toEmbed(s(d.url));
       const fmt = s(d.format).replace(":", "/") || "16/9";
       const ar = ["16/9", "9/16", "1/1", "4/3", "3/4", "21/9"].includes(fmt) ? fmt : "16/9";
+      const vsh = s(d.__shadow);
+      const vShadow = vsh === "forte" ? "0 22px 46px -14px rgba(0,0,0,.55)"
+        : vsh === "douce" ? "0 12px 28px -12px rgba(0,0,0,.32)"
+        : vsh === "aucune" ? "none" : imShadow;
+      const vRadius = typeof d.__radius === "number" ? d.__radius : undefined;
       return embed ? (
-        <iframe src={embed} style={{ width: "100%", aspectRatio: ar, border: "none", borderRadius: "var(--c-r, 20px)", boxShadow: imShadow, display: "block" }} allowFullScreen />
+        <iframe src={embed} style={{ width: "100%", aspectRatio: ar, border: "none", borderRadius: vRadius !== undefined ? vRadius : "var(--c-r, 20px)", boxShadow: vShadow, display: "block" }} allowFullScreen />
       ) : null;
     }
     case "podcast":
@@ -209,11 +226,11 @@ function renderBlock(block: Block, cardId: string, custom?: Card["custom"]): Rea
         : <div className="kc-prod-grid">{items.map(prodCard)}</div>;
     }
     case "payment":
-      return (
-        <a href={s(d.link) || "#"} className="kc-cta">
+      return s(d.link) ? (
+        <a href={s(d.link)} className="kc-cta">
           {s(d.label)} {s(d.amount) && `· ${s(d.amount)} ${s(d.currency)}`}
         </a>
-      );
+      ) : null;
     case "subscribe":
       return <SubscribeBlock cardId={cardId} data={d} />;
     case "reservation":
@@ -221,7 +238,7 @@ function renderBlock(block: Block, cardId: string, custom?: Card["custom"]): Rea
     case "form":
       return <FormBlock cardId={cardId} data={d} />;
     case "appointment":
-      return <a href={s(d.url) || "#"} className="kc-cta">📅 {s(d.title)}</a>;
+      return s(d.url) ? <a href={s(d.url)} className="kc-cta">📅 {s(d.title)}</a> : null;
     case "feedback":
       return (
         <div style={{ textAlign: "center" }}>
@@ -646,6 +663,35 @@ function renderBlock(block: Block, cardId: string, custom?: Card["custom"]): Rea
       return <AroundBlock data={d} fmt={bf || (shape === "original" ? "original" : "")} />;
     case "welcome":
       return <WelcomeBlock data={d} />;
+    case "maps": {
+      const addr = s(d.address);
+      if (!addr) return null;
+      const q = encodeURIComponent(addr);
+      const embed = `https://www.google.com/maps?q=${q}&z=15&hl=fr&output=embed`;
+      const dir = `https://www.google.com/maps/dir/?api=1&destination=${q}`;
+      const mfmt = (bf || s(d.format)).replace(":", "/");
+      const mar = ["16/9", "4/3", "1/1", "3/4", "21/9"].includes(mfmt) ? mfmt : "16/9";
+      return (
+        <div className="kc-maps">
+          {s(d.title) && <div className="kc-sec-title" style={{ padding: "0 2px 10px" }}>📍 {s(d.title)}</div>}
+          <div className="frame" style={{ aspectRatio: mar, minHeight: 180 }}>
+            <iframe src={embed} title={s(d.title) || "Carte"} loading="lazy" allowFullScreen referrerPolicy="no-referrer-when-downgrade" />
+            <a className="go" href={dir} target="_blank" rel="noopener">
+              <span className="pin">➤</span> {s(d.btnLabel) || "Itinéraire"}
+            </a>
+          </div>
+          {(s(d.address) || s(d.note)) && (
+            <div className="info">
+              <span className="ic">📍</span>
+              <div>
+                <b>{s(d.address)}</b>
+                {s(d.note) && <small>{s(d.note)}</small>}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
     case "rules": {
       const items = arr(d.items).filter((i) => s(i.name));
       return (
@@ -741,33 +787,39 @@ export default function CardRenderer({ card, actions }: { card: Card; actions?: 
     return true;
   });
 
+  const bgImage = s(custom?.bgImage);
+  const bgOv = typeof custom?.bgOverlay === "number" ? Math.min(100, Math.max(0, custom.bgOverlay)) / 100 : 0.45;
+
   return (
-    <div className="kc" style={vars}>
+    <div className={`kc${bgImage ? " kc--bgimg" : ""}`} style={bgImage ? { ...vars, backgroundImage: `url('${bgImage}')` } : vars}>
+      {bgImage && <div className="kc-bg-ov" style={{ opacity: bgOv }} />}
       {/* HERO */}
       <div
         className="kc-hero"
-        style={heroImg
-          ? { backgroundImage: `url('${heroImg}')` }
-          : { background: `linear-gradient(150deg, ${t.accent}, ${t.accent2})` }}
+        style={{
+          ...(heroImg
+            ? { backgroundImage: `url('${heroImg}')` }
+            : { background: `linear-gradient(150deg, ${t.accent}, ${t.accent2})` }),
+          ...(typeof custom?.heroHeight === "number" ? { minHeight: custom.heroHeight } : {}),
+        }}
       >
         <div className="kc-hero-ov" />
-        {/* Avatar : tout en haut de la carte, posé sur l'image de fond du profil */}
-        {heroAvatar && (() => {
-          const av = custom || {};
-          const size = typeof av.avatarSize === "number" ? Math.min(130, Math.max(50, av.avatarSize)) : 74;
-          const pos = av.avatarPos === "droite" ? "flex-end" : av.avatarPos === "centre" ? "center" : "flex-start";
-          return (
-            <div className="kc-avatar-top" style={{ position: "absolute", top: 16, left: 18, right: 18, display: "flex", justifyContent: pos, zIndex: 3 }}>
+        <div className="kc-hero-in">
+          {/* Avatar dans le flux → ne se superpose jamais au nom/aux infos */}
+          {heroAvatar && (() => {
+            const av = custom || {};
+            const size = typeof av.avatarSize === "number" ? Math.min(130, Math.max(50, av.avatarSize)) : 74;
+            const ml = av.avatarPos === "droite" || av.avatarPos === "centre" ? "auto" : "0";
+            const mr = av.avatarPos === "centre" ? "auto" : av.avatarPos === "droite" ? "0" : "auto";
+            return (
               <div className="kc-avatar" style={{
-                width: size, height: size, marginBottom: 0,
+                width: size, height: size, marginLeft: ml, marginRight: mr, marginBottom: 12,
                 backgroundImage: `url('${heroAvatar}')`,
                 border: av.avatarRing === false ? "none" : undefined,
                 boxShadow: av.avatarShadow === false ? "none" : undefined,
               }} />
-            </div>
-          );
-        })()}
-        <div className="kc-hero-in">
+            );
+          })()}
           <div className="kc-hero-name">{name}</div>
           {chips.length > 0 && (
             <div className="kc-chips">
@@ -775,6 +827,21 @@ export default function CardRenderer({ card, actions }: { card: Card; actions?: 
             </div>
           )}
           {s(profile?.bio) && <p className="kc-hero-bio">{s(profile?.bio)}</p>}
+          {(() => {
+            const ph = s(profile?.phone), em = s(profile?.email), ad = s(profile?.address);
+            if (!ph && !em && !ad) return null;
+            const dir = ad ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(ad)}` : "";
+            return (
+              <div className="kc-hero-contact">
+                {ph && <a className="row" href={`tel:${ph.replace(/\s/g, "")}`}><span className="ic">📞</span><span className="tx">{ph}</span></a>}
+                {em && <a className="row" href={`mailto:${em}`}><span className="ic">✉️</span><span className="tx">{em}</span></a>}
+                {ad && <a className="row" href={dir} target="_blank" rel="noopener"><span className="ic">📍</span><span className="tx">{ad}</span></a>}
+              </div>
+            );
+          })()}
+          {profile?.savebtn !== false && (s(profile?.phone) || s(profile?.email) || s(profile?.address) || s(profile?.name)) && (
+            <button type="button" data-kc-vcard className="kc-hero-save">📇 Enregistrer le contact</button>
+          )}
         </div>
       </div>
 
@@ -783,10 +850,22 @@ export default function CardRenderer({ card, actions }: { card: Card; actions?: 
         {sections.map((b, i) => {
           const content = renderBlock(b, card.id, custom);
           if (!content) return null;
+          const bd = b.data as Dict;
+          const al = s(bd.__align);
+          const fk = s(bd.__font);
+          const ts = s(bd.__textSize);
+          const perBlock: React.CSSProperties = {
+            animationDelay: `${Math.min(i * 70, 420)}ms`,
+            ...(typeof bd.__mt === "number" ? { marginTop: bd.__mt } : {}),
+            ...(typeof bd.__mb === "number" ? { marginBottom: bd.__mb } : {}),
+            ...(al ? { textAlign: al as React.CSSProperties["textAlign"] } : {}),
+            ...(fk && CARD_FONTS[fk] ? { fontFamily: CARD_FONTS[fk].stack } : {}),
+            ...(ts ? { ["--kc-tscale" as string]: ts === "s" ? "0.85" : ts === "l" ? "1.25" : ts === "xl" ? "1.5" : "1" } : {}),
+          };
           return (
             <section key={b.id}
-              className={`kc-sec${b.type === "video" ? " kc-sec--flush" : ["gallery", "carousel", "media", "product", "around"].includes(b.type) ? " kc-sec--media" : ""}${typeof (b.data as Dict).__anim === "string" && (b.data as Dict).__anim ? ` kc-a-${(b.data as Dict).__anim}` : ""}`}
-              style={{ animationDelay: `${Math.min(i * 70, 420)}ms` }}>
+              className={`kc-sec${["video", "social", "welcome"].includes(b.type) ? " kc-sec--flush" : ["gallery", "carousel", "media", "product", "around"].includes(b.type) ? " kc-sec--media" : ""}${ts ? " kc-sec--tscale" : ""}${al ? ` kc-al-${al}` : ""}${typeof bd.__anim === "string" && bd.__anim ? ` kc-a-${bd.__anim}` : ""}`}
+              style={perBlock}>
               {content}
             </section>
           );

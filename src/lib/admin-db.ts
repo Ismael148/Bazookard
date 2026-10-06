@@ -113,7 +113,7 @@ export interface ClientWs {
   id: string; name: string; slug: string; permissions: Permissions; cardId: string | null;
   card: Card | null;
   stats: { view: number; tap: number; chat: number; lead: number } | null;
-  leads: { name: string; contact: string; ts: number }[];
+  leads: { name: string; contact: string; ts: number; id?: string }[];
 }
 export interface ClientSession {
   client: { id: string; company: string; email: string; logo: string };
@@ -200,6 +200,32 @@ export async function clientDailyStats(days = 30): Promise<{ date: string; view:
   const { getDailyStats } = await import("./tracking");
   const ids = sess.workspaces.map((w) => w.cardId).filter(Boolean) as string[];
   return getDailyStats(ids, days);
+}
+
+/** Suppression d'un message/contact par le client (RPC sécurisée en mode Supabase). */
+export async function clientDeleteLead(cardId: string, lead: { id?: string; ts: number }): Promise<boolean> {
+  const sess = clientSession();
+  if (!sess) return false;
+  if (supabaseEnabled()) {
+    if (!lead.id) return false;
+    const { data, error } = await sb().rpc("client_delete_lead", {
+      p_email: sess.client.email, p_password: sess.password, p_lead: lead.id,
+    });
+    if (error || data !== true) return false;
+  } else {
+    // mode démo : retire de la liste locale (par horodatage)
+    try {
+      const key = `karte_leads_${cardId}`;
+      const list = JSON.parse(localStorage.getItem(key) || "[]") as { ts: number }[];
+      localStorage.setItem(key, JSON.stringify(list.filter((l) => l.ts !== lead.ts)));
+    } catch {}
+  }
+  // met à jour la copie locale de la session
+  sess.workspaces = sess.workspaces.map((w) =>
+    w.cardId === cardId ? { ...w, leads: (w.leads ?? []).filter((l) => (lead.id ? l.id !== lead.id : l.ts !== lead.ts)) } : w
+  );
+  try { localStorage.setItem(CSK, JSON.stringify(sess)); } catch {}
+  return true;
 }
 
 /** Quand le slug d'une carte change, le lien du workspace lié suit automatiquement. */

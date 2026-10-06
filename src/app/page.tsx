@@ -194,29 +194,46 @@ export default function Home() {
 
       {/* ===== HISTOIRE / STORYTELLING ===== */}
       <section className="lk7-sec lk7-story">
-        <div className="lk-sechead lk-reveal" style={{ marginBottom: 30 }}>
+        <div className="lk7-story-head lk-reveal">
           <span className="lk-eye">L&apos;histoire</span>
-          <h2 className="lk-h2-line">Chaque jour, un client vous file entre les doigts.</h2>
+          <h2 className="lk7-story-title">
+            Un client vous adore.<br /><span className="hl lk7-it">Puis il vous oublie.</span>
+          </h2>
         </div>
-        <div className="lk7-storygrid">
-          <div className="lk7-storytext lk-reveal">
-            <p><b>18h47.</b> Un client vient de repartir. Il a adoré. Il a pris une carte de visite, un flyer, noté un numéro sur son téléphone. Puis la vie a repris le dessus.</p>
-            <p>Le plombier qu&apos;on ne retrouve plus quand la fuite revient. Le resto « super sympa » dont on a oublié le nom. Le gîte parfait… mais l&apos;adresse du Wi-Fi, les horaires du ménage, le code du parking ? Envolés. Le garage, l&apos;électricien, l&apos;institut : tous vivent le même drame silencieux — <span className="hl">des clients conquis, puis perdus faute d&apos;un lien qui reste.</span></p>
-            <p>Le problème n&apos;a jamais été la qualité de votre travail. C&apos;est qu&apos;<b>entre vous et votre client, il n&apos;y a rien qui dure.</b> Un bout de papier finit à la poubelle. Un numéro se perd. Une belle rencontre s&apos;évapore.</p>
-            <p className="lk7-turn">Et si, d&apos;un seul geste, tout ce que vous êtes restait pour toujours dans la poche de vos clients ?</p>
+
+        {/* 3 moments — gros, aérés, visuels */}
+        <div className="lk7-moments">
+          <div className="lk7-moment lk-reveal rz">
+            <span className="em">🃏</span>
+            <b>La carte de visite</b>
+            <p>finit au fond d&apos;une poche, puis à la poubelle.</p>
           </div>
-          <div className="lk7-storycard lk-reveal rr">
-            <div className="tap">👆</div>
-            <div className="txt">
-              <b>Un tap. C&apos;est tout.</b>
-              <span>Le client approche son téléphone de votre carte Bazookard. Votre univers s&apos;ouvre : contact enregistré, réservation prise, fidélité activée. Il ne vous oubliera plus.</span>
-            </div>
+          <div className="lk7-moment lk-reveal rz d1">
+            <span className="em">📄</span>
+            <b>Le flyer du menu</b>
+            <p>déjà périmé le lendemain de l&apos;impression.</p>
+          </div>
+          <div className="lk7-moment lk-reveal rz d2">
+            <span className="em">📵</span>
+            <b>Le numéro noté</b>
+            <p>introuvable le jour où il veut revenir.</p>
           </div>
         </div>
-        <div className="lk7-storyneed">
-          {["Plombiers &amp; artisans", "Restaurants &amp; cafés", "Gîtes · Airbnb · villas", "Garages &amp; auto", "Instituts &amp; salons", "Électriciens", "Commerces", "Indépendants"].map((n) => (
-            <span key={n} className="chip" dangerouslySetInnerHTML={{ __html: n }} />
-          ))}
+
+        {/* Punch line géante */}
+        <p className="lk7-bigline lk-reveal">
+          Plombier, resto, gîte, garage, salon…<br />
+          <span className="hl">le problème n&apos;est jamais votre travail.</span><br />
+          C&apos;est qu&apos;entre vous et vos clients, <span className="lk7-it">rien ne dure.</span>
+        </p>
+
+        {/* Bascule vers la solution */}
+        <div className="lk7-flip">
+          <div className="tap">👆</div>
+          <div>
+            <b>Un tap. Et tout change.</b>
+            <span>Le client approche son téléphone de votre carte Bazookard. Votre univers s&apos;ouvre, son contact est capturé, il réserve — <b>et ne vous oublie plus jamais.</b></span>
+          </div>
         </div>
       </section>
 

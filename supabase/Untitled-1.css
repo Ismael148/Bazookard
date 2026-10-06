@@ -3668,24 +3668,19 @@ body{ display:flex; flex-direction:column; }
   min-height:var(--cv-footer-h); z-index:1000;
 }
 
-.cv-stage{
-  flex:1 1 auto;          /* occupe tout l'espace dispo */
-  position:relative;
-  overflow:hidden;
-}
+.cv-stage{ position:relative; width:100%; overflow:hidden; }
 
-.cv-panel{                /* chaque panneau scrolle en interne */
+.cv-panel{
   position:absolute; inset:0;
+  width:100%;
+  opacity:0;
   overflow-y:auto;
+  transform:translateX(60px);
+  transition:transform .7s cubic-bezier(.22,1,.36,1), opacity .6s ease;
+  will-change:transform, opacity;
 }
 
-/* Panneau actif : visible + animé */
-.cv-panel.is-active{
-  opacity:1;
-  visibility:visible;
-  transform:translateX(0) scale(1);
-  pointer-events:auto;
-}
+.cv-panel.is-active{ position:relative; opacity:1; transform:translateX(0); }
 
 /* Sens inverse quand on remonte dans le menu (optionnel, plus fluide) */
 .cv-panel.is-leaving{
@@ -3693,12 +3688,17 @@ body{ display:flex; flex-direction:column; }
   opacity:0;
 }
 
-/* Lien de menu actif */
-.cv-nav__links a.is-current{
-  color:#c8a24a; /* accent doré */
-  font-weight:600;
-}
+/* États d'entrée */
+.cv-panel.is-entering-right{ transform:translateX(60px);  opacity:0; }
+.cv-panel.is-entering-left { transform:translateX(-60px); opacity:0; }
 
+/* États de sortie */
+.cv-panel.is-leaving-left { transform:translateX(-60px); opacity:0; }
+.cv-panel.is-leaving-right{ transform:translateX(60px);  opacity:0; }
+
+/* Lien de menu actif */
+.cv-nav__links a.is-current{ color:var(--cv-gold) !important; }
+.cv-nav__links a.is-current::after{ width:100% !important; }
 /* Responsive : hauteurs mobiles */
 @media (max-width:768px){
   :root{ --cv-nav-h:70px; --cv-footer-h:70px; }
