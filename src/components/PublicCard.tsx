@@ -127,20 +127,30 @@ export default function PublicCard({ slug }: { slug: string }) {
 
         {/* QR + signature */}
         <div style={{ padding: "0 14px 26px", background: t.bg }}>
-          {qr && !card.custom?.hideQr && (
-            <div style={{ textAlign: "center", background: t.surface, border: `2px solid ${t.accent}`, borderRadius: 20, padding: 18, boxShadow: `0 14px 32px -18px ${t.accent}` }}>
-              <div style={{ position: "relative", width: 138, height: 138, margin: "0 auto" }}>
-                <img src={qr} alt="QR" width={138} height={138} style={{ borderRadius: 14, display: "block" }} />
+          {qr && !card.custom?.hideQr && (() => {
+            const qs = typeof card.custom?.qrSize === "number" ? Math.min(260, Math.max(120, card.custom.qrSize)) : 172;
+            const logo = Math.round(qs * 0.26);
+            return (
+            <div style={{
+              textAlign: "center", background: t.surface, border: `2px solid ${t.accent}`, borderRadius: 22, padding: 20,
+              boxShadow: `0 16px 36px -18px ${t.accent}`,
+              marginTop: typeof card.custom?.qrMt === "number" ? card.custom.qrMt : 0,
+              marginBottom: typeof card.custom?.qrMb === "number" ? card.custom.qrMb : 0,
+              maxWidth: qs + 56, marginLeft: "auto", marginRight: "auto",
+            }}>
+              <div style={{ position: "relative", width: qs, height: qs, margin: "0 auto" }}>
+                <img src={qr} alt="QR" width={qs} height={qs} style={{ width: qs, height: qs, borderRadius: 14, display: "block" }} />
                 {/* Logo au centre du QR */}
-                <span style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 38, height: 38, borderRadius: 11, background: "#fff", display: "grid", placeItems: "center", boxShadow: "0 2px 8px rgba(0,0,0,.25)", overflow: "hidden" }}>
+                <span style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: logo, height: logo, borderRadius: logo * 0.28, background: "#fff", display: "grid", placeItems: "center", boxShadow: "0 2px 8px rgba(0,0,0,.25)", overflow: "hidden" }}>
                   {qrLogo
                     ? <span style={{ width: "100%", height: "100%", backgroundImage: `url('${qrLogo}')`, backgroundSize: "cover", backgroundPosition: "center" }} />
-                    : <LogoMark size={26} ink="#17140C" accent={t.accent} />}
+                    : <LogoMark size={Math.round(logo * 0.68)} ink="#17140C" accent={t.accent} />}
                 </span>
               </div>
               <div style={{ color: t.soft, fontSize: 11.5, marginTop: 10, fontWeight: 600 }}>Scannez pour partager cette carte</div>
             </div>
-          )}
+            );
+          })()}
           {!card.custom?.hideCredit && (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, color: t.soft, fontSize: 12, marginTop: 16 }}>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>

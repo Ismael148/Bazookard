@@ -352,6 +352,25 @@ export default function Editor({ initial, perms = FULL, backHref = "/dashboard",
                   <input type="range" min={0} max={100} value={card.custom?.overlay ?? 100}
                     onChange={(e) => setCustom({ overlay: Number(e.target.value) })} style={{ width: "100%", accentColor: "#E8A800" }} />
                 </div>
+                <ColorField label="Couleur du voile du hero" value={card.custom?.overlayColor || "#0A0A0C"}
+                  onChange={(v) => setCustom({ overlayColor: v })} onReset={() => setCustom({ overlayColor: undefined })} />
+                <div />
+                <div>
+                  <label className="lbl">Taille du QR code : {card.custom?.qrSize ?? 172}px</label>
+                  <input type="range" min={120} max={260} step={4} value={card.custom?.qrSize ?? 172}
+                    onChange={(e) => setCustom({ qrSize: Number(e.target.value) })} style={{ width: "100%", accentColor: "#E8A800" }} />
+                </div>
+                <div />
+                <div>
+                  <label className="lbl">Marge au-dessus du QR : {card.custom?.qrMt ?? 0}px</label>
+                  <input type="range" min={0} max={60} value={card.custom?.qrMt ?? 0}
+                    onChange={(e) => setCustom({ qrMt: Number(e.target.value) })} style={{ width: "100%", accentColor: "#E8A800" }} />
+                </div>
+                <div>
+                  <label className="lbl">Marge en dessous du QR : {card.custom?.qrMb ?? 0}px</label>
+                  <input type="range" min={0} max={60} value={card.custom?.qrMb ?? 0}
+                    onChange={(e) => setCustom({ qrMb: Number(e.target.value) })} style={{ width: "100%", accentColor: "#E8A800" }} />
+                </div>
                 <div style={{ gridColumn: "1/-1" }}>
                   <label className="lbl">Logo au centre du QR code</label>
                   <ImageInput value={card.custom?.qrLogo ?? ""}

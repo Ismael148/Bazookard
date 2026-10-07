@@ -758,6 +758,7 @@ export default function CardRenderer({ card, actions }: { card: Card; actions?: 
     "--c-bg": t.bg, "--c-surface": t.surface, "--c-ink": t.ink, "--c-soft": t.soft,
     "--c-line": t.line, "--c-accent": t.accent, "--c-accent2": t.accent2, "--c-accent-ink": t.accentInk,
     "--c-font": fontStack, "--c-ov": overlay,
+    "--c-ovcolor": custom?.overlayColor || "#0A0A0C",
     "--c-r": `${typeof custom?.radius === "number" ? custom.radius : 20}px`,
     ...(custom?.align ? { textAlign: custom.align } : {}),
   } as React.CSSProperties;

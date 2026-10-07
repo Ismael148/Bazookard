@@ -36,6 +36,10 @@ export interface CardCustom {
   hideCredit?: boolean;                                       // masquer complètement la mention « Propulsé par »
   qrLogo?: string;                                            // logo affiché au centre du QR code
   hideQr?: boolean;                                           // masquer le QR code en bas de carte
+  qrSize?: number;                                            // taille du QR code (120–260 px)
+  qrMt?: number;                                              // marge au-dessus du QR (0–60 px)
+  qrMb?: number;                                              // marge en dessous du QR (0–60 px)
+  overlayColor?: string;                                      // couleur du voile du hero (défaut sombre)
   heroHeight?: number;                                        // hauteur du hero/bannière (200–620 px)
   bgImage?: string;                                           // image de fond de toute la carte
   bgOverlay?: number;                                         // voile sombre sur l'image de fond (0–100 %)
