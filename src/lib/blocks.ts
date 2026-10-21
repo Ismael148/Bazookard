@@ -35,12 +35,13 @@ export const BLOCK_DEFS: BlockDef[] = [
   // --- Identité ---
   {
     type: "profile", name: "Profil", icon: "👤", category: "Identité",
-    defaults: { name: "Ton Nom", title: "Poste", company: "Entreprise", photo: "", bio: "Networking sans contact. Tapez pour échanger nos coordonnées.", phone: "", email: "", address: "", savebtn: true },
+    defaults: { name: "Ton Nom", title: "Poste", company: "Entreprise", photo: "", logo: "", bio: "Networking sans contact. Tapez pour échanger nos coordonnées.", phone: "", email: "", address: "", savebtn: true },
     fields: [
       { key: "name", label: "Nom complet", type: "text" },
       { key: "title", label: "Poste / Titre", type: "text" },
       { key: "company", label: "Entreprise", type: "text" },
-      { key: "photo", label: "Photo (URL)", type: "image" },
+      { key: "photo", label: "Photo / image d'en-tête (grande, en fond)", type: "image" },
+      { key: "logo", label: "Logo (petit rond en haut à gauche) — sinon on reprend la photo", type: "image" },
       { key: "bio", label: "Bio courte", type: "textarea", ai: true },
       { key: "phone", label: "Téléphone", type: "tel", placeholder: "+262 6 92 …" },
       { key: "email", label: "Email", type: "email", placeholder: "contact@monentreprise.re" },

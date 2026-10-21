@@ -815,7 +815,11 @@ export default function CardRenderer({ card, actions }: { card: Card; actions?: 
   const avatarBlk = card.blocks.find((b) => b.type === "avatar")?.data as Dict | undefined;
   // Avatar du haut de carte : l'image du bloc « Avatar » (logo, personne…) en priorité,
   // sinon la photo de profil en secours.
-  const heroAvatar = s(avatarBlk?.image) || s(profile?.photo);
+  // Priorité à un logo dédié (champ « Logo » du profil) pour le petit rond en haut,
+  // sinon l'avatar du bloc Avatar, sinon la photo d'en-tête.
+  const heroAvatar = s(profile?.logo) || s(avatarBlk?.image) || s(profile?.photo);
+  const socialBlk = card.blocks.find((b) => b.type === "social")?.data as Dict | undefined;
+  const socialItems = arr(socialBlk?.items).filter((i) => s(i.url));
   const hasChatbot = card.blocks.some((b) => b.type === "chatbot");
   const chatbotGreeting = s((card.blocks.find((b) => b.type === "chatbot")?.data as Dict | undefined)?.greeting);
 
@@ -829,10 +833,12 @@ export default function CardRenderer({ card, actions }: { card: Card; actions?: 
   let heroProfileUsed = false;
   let heroBannerUsed = false;
   let heroAvatarUsed = false;
+  let heroSocialUsed = false;
   const sections = card.blocks.filter((b) => {
     if (b.type === "profile" && !heroProfileUsed) { heroProfileUsed = true; return false; }
     if (b.type === "banner" && !heroBannerUsed) { heroBannerUsed = true; return false; }
     if (b.type === "avatar" && !heroAvatarUsed) { heroAvatarUsed = true; return false; }
+    if (b.type === "social" && !heroSocialUsed) { heroSocialUsed = true; return false; }
     if (b.type === "chatbot" || b.type === "splitter") return false;
     return true;
   });
@@ -883,6 +889,16 @@ export default function CardRenderer({ card, actions }: { card: Card; actions?: 
             </div>
           )}
           {s(profile?.bio) && <p className="kc-hero-bio">{s(profile?.bio)}</p>}
+          {socialItems.length > 0 && (
+            <div className="kc-hero-social">
+              {socialItems.map((i, k) => (
+                <a key={k} href={s(i.url)} className="kc-hero-social-pod" target="_blank" rel="noopener"
+                  aria-label={s(i.network)} style={{ animationDelay: `${k * 70}ms` }}>
+                  <SocialIcon network={s(i.network)} color={s(i.color) || undefined} size={40} />
+                </a>
+              ))}
+            </div>
+          )}
           {(() => {
             const ph = s(profile?.phone), em = s(profile?.email), ad = s(profile?.address);
             if (!ph && !em && !ad) return null;
