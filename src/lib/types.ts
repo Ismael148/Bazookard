@@ -43,6 +43,9 @@ export interface CardCustom {
   heroHeight?: number;                                        // hauteur du hero/bannière (200–620 px)
   bgImage?: string;                                           // image de fond de toute la carte
   bgOverlay?: number;                                         // voile sombre sur l'image de fond (0–100 %)
+  bgFit?: "" | "cover" | "contain";                          // ajustement de l'image de fond
+  bgAttach?: "" | "fixed" | "scroll";                        // image de fond fixe ou qui défile
+  noHeroImage?: boolean;                                      // ne PAS utiliser la photo/bannière comme grande image d'en-tête
 }
 
 export const CARD_FONTS: Record<string, { label: string; stack: string }> = {

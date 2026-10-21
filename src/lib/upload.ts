@@ -15,6 +15,15 @@ export function processImage(file: File, opts: UploadOptions = {}): Promise<stri
   const { maxSize = 1280, quality = 0.82 } = opts;
   return new Promise((resolve, reject) => {
     if (!file.type.startsWith("image/")) { reject(new Error("Fichier non image")); return; }
+    // GIF animé : ne JAMAIS passer par le canvas (cela aplatit l'animation sur 1 image).
+    // On renvoie le fichier tel quel (data URL) pour préserver le mouvement.
+    if (file.type === "image/gif") {
+      const r = new FileReader();
+      r.onload = () => resolve(String(r.result));
+      r.onerror = () => reject(new Error("GIF illisible"));
+      r.readAsDataURL(file);
+      return;
+    }
     const url = URL.createObjectURL(file);
     const img = new Image();
     img.onload = () => {

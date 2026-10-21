@@ -428,11 +428,13 @@ export const BLOCK_DEFS: BlockDef[] = [
     fields: [
       { key: "title", label: "Titre", type: "text" },
       { key: "style", label: "Style d'affichage", type: "select", options: [
-        ["", "Classique (liste)"],
+        ["cards", "Cartes à icônes (moderne) ✨"],
+        ["glow", "Néon / glow (fun) 🌈"],
         ["digital", "Digital LED (animé)"],
         ["pills", "Capsules premium"],
         ["timeline", "Timeline élégante"],
         ["minimal", "Minimal chic"],
+        ["", "Classique (liste)"],
       ] },
       {
         key: "items", label: "Jours", type: "repeater", addLabel: "+ Ajouter un jour",

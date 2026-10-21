@@ -24,8 +24,12 @@ export default function ImageInput({ value, onChange, disabled = false, placehol
     if (!file || disabled) return;
     setErr(""); setBusy(true);
     try {
+      const isGif = file.type === "image/gif";
       const url = await uploadImage(file, { maxSize: 1800, quality: 0.9 });
-      setCropSrc(url); // ouvre le recadrage
+      // GIF : on l'insère directement, sans recadrage (le recadrage repasse par un canvas
+      // qui détruirait l'animation). Les autres formats ouvrent l'outil de recadrage.
+      if (isGif) onChange(url);
+      else setCropSrc(url);
     } catch {
       setErr("Impossible de lire cette image.");
     } finally { setBusy(false); }

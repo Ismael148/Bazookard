@@ -336,6 +336,16 @@ export default function Editor({ initial, perms = FULL, backHref = "/dashboard",
                     onChange={(e) => setCustom({ heroHeight: Number(e.target.value) })} style={{ width: "100%", accentColor: "#E8A800" }} />
                 </div>
                 <div style={{ gridColumn: "1/-1" }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 12.5, color: "var(--muted)", cursor: "pointer" }}>
+                    <input type="checkbox" checked={card.custom?.noHeroImage !== true}
+                      onChange={(e) => setCustom({ noHeroImage: !e.target.checked })} style={{ accentColor: "#E8A800" }} />
+                    Utiliser la photo de profil en grande image d&apos;en-tête
+                  </label>
+                  <p style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 4 }}>
+                    Décochez si vous voulez une <b>image de fond</b> (ci-dessous) comme visuel principal : la photo restera en petit avatar rond.
+                  </p>
+                </div>
+                <div style={{ gridColumn: "1/-1" }}>
                   <label className="lbl">🖼 Image de fond de toute la carte (optionnel)</label>
                   <ImageInput value={card.custom?.bgImage ?? ""} onChange={(v) => setCustom({ bgImage: v })}
                     placeholder="Image d'ambiance affichée derrière tous les blocs" />
@@ -345,6 +355,26 @@ export default function Editor({ initial, perms = FULL, backHref = "/dashboard",
                     <label className="lbl">Voile sombre sur l&apos;image de fond : {card.custom?.bgOverlay ?? 45}%</label>
                     <input type="range" min={0} max={100} value={card.custom?.bgOverlay ?? 45}
                       onChange={(e) => setCustom({ bgOverlay: Number(e.target.value) })} style={{ width: "100%", accentColor: "#E8A800" }} />
+                  </div>
+                )}
+                {card.custom?.bgImage && (
+                  <div>
+                    <label className="lbl">Comportement du fond</label>
+                    <select className="in" value={card.custom?.bgAttach || "scroll"}
+                      onChange={(e) => setCustom({ bgAttach: e.target.value as NonNullable<CardCustom["bgAttach"]> })}>
+                      <option value="scroll">Défile avec la carte</option>
+                      <option value="fixed">Fixe (zoom réduit, calé à l&apos;écran)</option>
+                    </select>
+                  </div>
+                )}
+                {card.custom?.bgImage && (
+                  <div>
+                    <label className="lbl">Ajustement de l&apos;image</label>
+                    <select className="in" value={card.custom?.bgFit || "cover"}
+                      onChange={(e) => setCustom({ bgFit: e.target.value as NonNullable<CardCustom["bgFit"]> })}>
+                      <option value="cover">Remplir (recadre)</option>
+                      <option value="contain">Entière (sans recadrage)</option>
+                    </select>
                   </div>
                 )}
                 <div style={{ gridColumn: "1/-1" }}>
@@ -450,6 +480,21 @@ export default function Editor({ initial, perms = FULL, backHref = "/dashboard",
                   </div>
                 )}
 
+                {def.type === "carousel" && (() => {
+                  const sec = Number((selBlock.data as Dict).__slideSec ?? 0);
+                  return (
+                    <div>
+                      <label className="lbl">⏱ Défilement automatique : {sec > 0 ? `toutes les ${sec}s` : "manuel (glisser)"}</label>
+                      <input type="range" min={0} max={10} step={1} value={sec} disabled={!perms.editText}
+                        onChange={(e) => updateBlock(selBlock.id, { ...(selBlock.data as Dict), __slideSec: Number(e.target.value) })}
+                        style={{ width: "100%", accentColor: "#E8A800" }} />
+                      <p style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 4 }}>
+                        0 = l&apos;utilisateur fait défiler lui-même. Sinon, les images défilent toutes seules au rythme choisi.
+                      </p>
+                    </div>
+                  );
+                })()}
+
                 {["gallery", "carousel", "media", "events", "offers", "product", "around", "equipment"].includes(def.type) && (
                   <div>
                     <label className="lbl">🖼 Format des images de ce bloc</label>
@@ -508,7 +553,10 @@ export default function Editor({ initial, perms = FULL, backHref = "/dashboard",
                       {Object.entries(CARD_FONTS).map(([k, f]) => <option key={k} value={k}>{f.label}</option>)}
                     </select>
                   </div>
-                  <div />
+                  <ColorField label="Couleur du texte"
+                    value={String((selBlock.data as Dict).__textColor ?? "")}
+                    onChange={(v) => updateBlock(selBlock.id, { ...(selBlock.data as Dict), __textColor: v })}
+                    onReset={() => updateBlock(selBlock.id, { ...(selBlock.data as Dict), __textColor: "" })} />
                   <div>
                     <label className="lbl">Marge en haut : {Number((selBlock.data as Dict).__mt ?? 0)}px</label>
                     <input type="range" min={0} max={60} value={Number((selBlock.data as Dict).__mt ?? 0)} disabled={!perms.editText}
@@ -521,6 +569,12 @@ export default function Editor({ initial, perms = FULL, backHref = "/dashboard",
                       onChange={(e) => updateBlock(selBlock.id, { ...(selBlock.data as Dict), __mb: Number(e.target.value) })}
                       style={{ width: "100%", accentColor: "#E8A800" }} />
                   </div>
+                  <label style={{ gridColumn: "1/-1", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, cursor: "pointer" }}>
+                    <span className="lbl" style={{ marginBottom: 0 }}>Supprimer le fond blanc du bloc (transparent)</span>
+                    <button type="button" className={`a-switch ${(selBlock.data as Dict).__noBg === true ? "on" : ""}`} disabled={!perms.editText}
+                      onClick={() => perms.editText && updateBlock(selBlock.id, { ...(selBlock.data as Dict), __noBg: !((selBlock.data as Dict).__noBg === true) })}
+                      aria-label="Supprimer le fond du bloc" />
+                  </label>
                 </div>
 
                 {perms.editStructure && (

@@ -11,6 +11,7 @@ import WelcomeBlock from "./WelcomeBlock";
 import SubscribeBlock from "./SubscribeBlock";
 import ReservationBlock from "./ReservationBlock";
 import FormBlock from "./FormBlock";
+import CarouselBlock from "./CarouselBlock";
 
 type Dict = Record<string, unknown>;
 const s = (v: unknown) => (typeof v === "string" ? v : "");
@@ -45,8 +46,8 @@ function renderBlock(block: Block, cardId: string, custom?: Card["custom"]): Rea
     case "headline":
       return (
         <>
-          {s(d.title) && <div className="kc-sec-title" style={{ marginBottom: s(d.text) ? 6 : 0 }}>{s(d.title)}</div>}
-          {s(d.text) && <p style={{ color: "var(--c-soft)", fontSize: 13.5, lineHeight: 1.55 }}>{s(d.text)}</p>}
+          {s(d.title) && <div className="kc-sec-title kc-hl-title" style={{ marginBottom: s(d.text) ? 6 : 0 }}>{s(d.title)}</div>}
+          {s(d.text) && <p className="kc-hl-text">{s(d.text)}</p>}
         </>
       );
     case "avatar":
@@ -133,15 +134,10 @@ function renderBlock(block: Block, cardId: string, custom?: Card["custom"]): Rea
         : round
         ? { width: carH, height: carH, objectFit: "cover", borderRadius: "50%", flexShrink: 0, boxShadow: imShadow }
         : { height: carH2, aspectRatio: bratio || (!ratio || ratio === "1" ? undefined : ratio), objectFit: "cover", borderRadius: 14, flexShrink: 0, boxShadow: imShadow };
+      // Défilement auto réglable dans l'éditeur (__slideSec, en secondes ; 0 = manuel)
+      const slideMs = Math.max(0, Math.round(Number(d.__slideSec) || 0)) * 1000;
       return (
-        <div className={`kc-carousel${orig ? " orig" : ""}`}>
-          {arr(d.items).filter((i) => s(i.image)).map((i, k) => {
-            const img = <img src={s(i.image)} alt="" style={imgStyle()} />;
-            return s(i.url)
-              ? <a key={k} href={s(i.url)} target="_blank" rel="noopener" className="slide">{img}</a>
-              : <span key={k} className="slide">{img}</span>;
-          })}
-        </div>
+        <CarouselBlock items={arr(d.items)} imgStyle={imgStyle()} orig={orig} intervalMs={slideMs} />
       );
     }
     case "video": {
@@ -499,6 +495,55 @@ function renderBlock(block: Block, cardId: string, custom?: Card["custom"]): Rea
           </>
         );
       }
+      // Icône d'horloge selon le jour (moderne & fun)
+      const dayIcon = (day: string, closed: boolean) => {
+        if (closed) return "🔒";
+        const d2 = day.toLowerCase();
+        if (d2.startsWith("sam") || d2.startsWith("dim")) return "🎉";
+        return "🕒";
+      };
+      if (hstyle === "cards") {
+        return (
+          <>
+            {head}
+            <div className="kc-h-cards">
+              {items.map((i, k) => {
+                const isToday = s(i.day).toLowerCase().startsWith(todayName.slice(0, 4));
+                const closed = /ferm/i.test(s(i.hours));
+                return (
+                  <div key={k} className={`hc${isToday ? " today" : ""}${closed ? " off" : ""}`} style={{ animationDelay: `${k * 55}ms` }}>
+                    <span className="em">{dayIcon(s(i.day), closed)}</span>
+                    <span className="day">{s(i.day)}</span>
+                    <span className="hrs">{closed ? "Fermé" : animDigits(s(i.hours) || "—", k)}</span>
+                    {isToday && <span className="now">Aujourd&apos;hui</span>}
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        );
+      }
+      if (hstyle === "glow") {
+        return (
+          <>
+            {head}
+            <div className="kc-h-glow">
+              {items.map((i, k) => {
+                const isToday = s(i.day).toLowerCase().startsWith(todayName.slice(0, 4));
+                const closed = /ferm/i.test(s(i.hours));
+                return (
+                  <div key={k} className={`row${isToday ? " today" : ""}${closed ? " off" : ""}`} style={{ animationDelay: `${k * 55}ms` }}>
+                    <span className="em">{closed ? "🌙" : "⏰"}</span>
+                    <span className="day">{s(i.day)}</span>
+                    <span className="dots" />
+                    <span className="hrs">{closed ? "Fermé" : animDigits(s(i.hours) || "—", k)}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        );
+      }
       // Style classique (liste) — avec chiffres animés
       return (
         <>
@@ -667,7 +712,9 @@ function renderBlock(block: Block, cardId: string, custom?: Card["custom"]): Rea
       const addr = s(d.address);
       if (!addr) return null;
       const q = encodeURIComponent(addr);
-      const embed = `https://www.google.com/maps?q=${q}&z=15&hl=fr&output=embed`;
+      // Embed sans clé API : la forme maps.google.com/maps?...&output=embed reste
+      // intégrable en iframe (www.google.com/maps est souvent bloqué par X-Frame-Options).
+      const embed = `https://maps.google.com/maps?q=${q}&t=&z=15&ie=UTF8&iwloc=&hl=fr&output=embed`;
       const dir = `https://www.google.com/maps/dir/?api=1&destination=${q}`;
       const mfmt = (bf || s(d.format)).replace(":", "/");
       const mar = ["16/9", "4/3", "1/1", "3/4", "21/9"].includes(mfmt) ? mfmt : "16/9";
@@ -772,7 +819,9 @@ export default function CardRenderer({ card, actions }: { card: Card; actions?: 
   const hasChatbot = card.blocks.some((b) => b.type === "chatbot");
   const chatbotGreeting = s((card.blocks.find((b) => b.type === "chatbot")?.data as Dict | undefined)?.greeting);
 
-  const heroImg = s(banner?.image) || s(profile?.photo);
+  // Si « noHeroImage » est activé, la photo ne sert PAS de grand fond d'en-tête
+  // (le hero prend le dégradé du thème) — elle reste visible en avatar rond.
+  const heroImg = custom?.noHeroImage ? "" : (s(banner?.image) || s(profile?.photo));
   const name = s(profile?.name) || card.title;
   const chips = [s(profile?.title), s(profile?.company)].filter(Boolean);
 
@@ -792,7 +841,13 @@ export default function CardRenderer({ card, actions }: { card: Card; actions?: 
   const bgOv = typeof custom?.bgOverlay === "number" ? Math.min(100, Math.max(0, custom.bgOverlay)) / 100 : 0.45;
 
   return (
-    <div className={`kc${bgImage ? " kc--bgimg" : ""}`} style={bgImage ? { ...vars, backgroundImage: `url('${bgImage}')` } : vars}>
+    <div className={`kc${bgImage ? " kc--bgimg" : ""}`} style={bgImage ? {
+      ...vars,
+      backgroundImage: `url('${bgImage}')`,
+      backgroundSize: custom?.bgFit === "contain" ? "contain" : "cover",
+      backgroundAttachment: custom?.bgAttach === "fixed" ? "fixed" : "scroll",
+      backgroundRepeat: custom?.bgFit === "contain" ? "no-repeat" : "no-repeat",
+    } : vars}>
       {bgImage && <div className="kc-bg-ov" style={{ opacity: bgOv }} />}
       {/* HERO */}
       <div
@@ -855,6 +910,7 @@ export default function CardRenderer({ card, actions }: { card: Card; actions?: 
           const al = s(bd.__align);
           const fk = s(bd.__font);
           const ts = s(bd.__textSize);
+          const tc = s(bd.__textColor);
           const perBlock: React.CSSProperties = {
             animationDelay: `${Math.min(i * 70, 420)}ms`,
             ...(typeof bd.__mt === "number" ? { marginTop: bd.__mt } : {}),
@@ -862,10 +918,11 @@ export default function CardRenderer({ card, actions }: { card: Card; actions?: 
             ...(al ? { textAlign: al as React.CSSProperties["textAlign"] } : {}),
             ...(fk && CARD_FONTS[fk] ? { fontFamily: CARD_FONTS[fk].stack } : {}),
             ...(ts ? { ["--kc-tscale" as string]: ts === "s" ? "0.85" : ts === "l" ? "1.25" : ts === "xl" ? "1.5" : "1" } : {}),
+            ...(tc ? { ["--kc-tcolor" as string]: tc } : {}),
           };
           return (
             <section key={b.id}
-              className={`kc-sec${["video", "social", "welcome"].includes(b.type) ? " kc-sec--flush" : ["gallery", "carousel", "media", "product", "around"].includes(b.type) ? " kc-sec--media" : ""}${ts ? " kc-sec--tscale" : ""}${al ? ` kc-al-${al}` : ""}${typeof bd.__anim === "string" && bd.__anim ? ` kc-a-${bd.__anim}` : ""}`}
+              className={`kc-sec${["video", "social", "welcome"].includes(b.type) ? " kc-sec--flush" : ["gallery", "carousel", "media", "product", "around"].includes(b.type) ? " kc-sec--media" : ""}${bd.__noBg === true ? " kc-sec--nobg" : ""}${ts ? " kc-sec--tscale" : ""}${tc ? " kc-sec--tcolor" : ""}${fk && CARD_FONTS[fk] ? " kc-sec--font" : ""}${al ? ` kc-al-${al}` : ""}${typeof bd.__anim === "string" && bd.__anim ? ` kc-a-${bd.__anim}` : ""}`}
               style={perBlock}>
               {content}
             </section>

@@ -169,7 +169,7 @@ textarea.in { resize: vertical; min-height: 58px; }
 .kc-hero { position: relative; min-height: 280px; display: flex; flex-direction: column; justify-content: flex-end; background-size: cover; background-position: center; }
 .kc-hero-ov { position: absolute; inset: 0; opacity: var(--c-ov, 1); background: linear-gradient(180deg, color-mix(in srgb, var(--c-ovcolor, #0A0A0C) 8%, transparent) 26%, color-mix(in srgb, var(--c-ovcolor, #0A0A0C) 60%, transparent) 76%, color-mix(in srgb, var(--c-ovcolor, #0A0A0C) 82%, transparent)); }
 /* Ombrage doux en bas du hero, teinté par le fond choisi (moderne & épuré) */
-.kc-hero::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 70px; background: linear-gradient(180deg, transparent, var(--c-bg) 92%); pointer-events: none; }
+.kc-hero::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 120px; z-index: 1; background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--c-ovcolor,#0A0A0C) 35%, transparent) 55%, var(--c-bg) 96%); pointer-events: none; }
 .kc-hero-in { position: relative; padding: 20px 20px 40px; color: #fff; }
 .kc-hero-name { font-family: var(--font-display), sans-serif; font-size: 34px; font-weight: 700; line-height: 1.05; letter-spacing: -.02em; text-shadow: 0 2px 18px rgba(0,0,0,.35); }
 .kc-hero-bio { font-size: 13.5px; line-height: 1.5; opacity: .92; margin-top: 8px; max-width: 34ch; text-shadow: 0 1px 10px rgba(0,0,0,.4); }
@@ -1462,6 +1462,16 @@ textarea.in { resize: vertical; min-height: 58px; }
 /* Taille de texte réglable par bloc (curseur « Taille du texte ») */
 .kc-sec--tscale .kc-sec-title { font-size: calc(17px * var(--kc-tscale, 1)); }
 .kc-sec--tscale p { font-size: calc(13.5px * var(--kc-tscale, 1)); }
+/* Bloc « Titre & Texte » : texte paramétrable (taille via --kc-tscale, couleur, police) */
+.kc-hl-text { color: var(--c-soft); font-size: 13.5px; line-height: 1.55; }
+.kc-sec--tscale .kc-hl-text { font-size: calc(13.5px * var(--kc-tscale, 1)); }
+/* Couleur de texte choisie pour ce bloc (titre + paragraphe) */
+.kc-sec--tcolor .kc-sec-title,
+.kc-sec--tcolor .kc-hl-text,
+.kc-sec--tcolor > p { color: var(--kc-tcolor) !important; }
+.kc-sec--tcolor .kc-sec-title::before { background: var(--kc-tcolor) !important; }
+/* Police choisie pour ce bloc : le titre hérite (sinon il force var(--font-display)) */
+.kc-sec--font .kc-sec-title { font-family: inherit !important; }
 
 /* Alignement par bloc — le titre est en flex (barre d'accent), on ajuste sa justification */
 .kc-al-center { text-align: center; }
@@ -1539,3 +1549,43 @@ textarea.in { resize: vertical; min-height: 58px; }
   border-color: rgba(255,255,255,.18);
 }
 .kc--bgimg .kc-hero::after { display: none; }
+
+/* Bloc sans fond (transparent) — réglable par bloc */
+.kc-sec--nobg { background: transparent !important; border: none !important; box-shadow: none !important; }
+.kc-sec--nobg::before { display: none !important; }
+
+/* ===================================================================
+   HORAIRES — styles modernes à icônes
+   =================================================================== */
+/* Cartes à icônes */
+.kc-h-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.kc-h-cards .hc { position: relative; display: flex; flex-direction: column; gap: 2px; padding: 12px 13px; border-radius: 15px;
+  background: var(--c-bg); border: 1px solid var(--c-line); animation: kcAFade .45s ease both; }
+.kc-h-cards .hc .em { font-size: 20px; line-height: 1; }
+.kc-h-cards .hc .day { font-size: 12px; font-weight: 800; letter-spacing: .02em; margin-top: 4px; }
+.kc-h-cards .hc .hrs { font-size: 12.5px; color: var(--c-soft); font-variant-numeric: tabular-nums; }
+.kc-h-cards .hc.off { opacity: .62; }
+.kc-h-cards .hc.off .hrs { color: #C43D3D; font-weight: 700; }
+.kc-h-cards .hc.today { background: linear-gradient(145deg, color-mix(in srgb, var(--c-accent) 18%, var(--c-surface)), var(--c-surface)); border-color: var(--c-accent);
+  box-shadow: 0 10px 24px -14px color-mix(in srgb, var(--c-accent) 70%, transparent); }
+.kc-h-cards .hc .now { position: absolute; top: 9px; right: 9px; font-size: 9px; font-weight: 900; letter-spacing: .05em; text-transform: uppercase;
+  padding: 3px 7px; border-radius: 999px; background: var(--c-accent); color: var(--c-accent-ink); }
+
+/* Néon / glow */
+.kc-h-glow { display: flex; flex-direction: column; gap: 7px; background: #0b0e13; border-radius: 16px; padding: 12px 14px;
+  border: 1px solid #1b2230; box-shadow: inset 0 0 26px rgba(0,0,0,.55); }
+.kc-h-glow .row { display: flex; align-items: center; gap: 11px; padding: 7px 4px; border-bottom: 1px dashed rgba(255,255,255,.07); animation: kcASlide .5s cubic-bezier(.16,1,.3,1) both; }
+.kc-h-glow .row:last-child { border-bottom: none; }
+.kc-h-glow .em { font-size: 17px; filter: drop-shadow(0 0 6px rgba(72,240,139,.5)); }
+.kc-h-glow .day { font-size: 12.5px; font-weight: 700; color: #cfe0ef; }
+.kc-h-glow .dots { flex: 1; height: 1px; background: repeating-linear-gradient(90deg, rgba(255,255,255,.16) 0 3px, transparent 3px 7px); }
+.kc-h-glow .hrs { font-family: 'Courier New', ui-monospace, monospace; font-size: 13.5px; font-weight: 700; color: #48f08b;
+  text-shadow: 0 0 8px rgba(72,240,139,.65); font-variant-numeric: tabular-nums; }
+.kc-h-glow .row.off .em { filter: none; }
+.kc-h-glow .row.off .hrs { color: #ff6b6b; text-shadow: 0 0 8px rgba(255,107,107,.5); }
+.kc-h-glow .row.today { background: rgba(255,213,74,.08); border-radius: 10px; }
+.kc-h-glow .row.today .hrs { color: #ffd54a; text-shadow: 0 0 8px rgba(255,213,74,.7); }
+.kc-h-glow .row.today .day { color: #fff; }
+
+/* Aperçu éditeur (téléphone) : pas d'effet empilé — les sections défilent normalement */
+.ed-phone-scroll .kc-sec { position: relative !important; top: auto !important; }
