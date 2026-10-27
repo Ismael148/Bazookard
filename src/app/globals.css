@@ -1603,3 +1603,45 @@ textarea.in { resize: vertical; min-height: 58px; }
 
 /* Aperçu éditeur (téléphone) : pas d'effet empilé — les sections défilent normalement */
 .ed-phone-scroll .kc-sec { position: relative !important; top: auto !important; }
+
+/* ── Bandeau « Annuler » (suppression de section annulable en 1 clic) ──── */
+.ed-undo-toast { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%);
+  z-index: 1200; display: flex; align-items: center; gap: 12px;
+  background: #11161d; color: #fff; border: 1px solid rgba(255,255,255,.14);
+  padding: 11px 12px 11px 16px; border-radius: 14px; box-shadow: 0 18px 40px -12px rgba(0,0,0,.5);
+  font-size: 13.5px; max-width: calc(100vw - 32px); animation: edUndoIn .22s cubic-bezier(.16,1,.3,1) both; }
+@keyframes edUndoIn { from { opacity: 0; transform: translate(-50%, 14px); } to { opacity: 1; transform: translate(-50%, 0); } }
+.ed-undo-toast .ut-ic { font-size: 15px; }
+.ed-undo-toast .ut-msg { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ed-undo-toast .ut-undo { background: #E8A800; color: #231a00; border: none; border-radius: 9px;
+  padding: 7px 13px; font-weight: 800; font-size: 13px; cursor: pointer; white-space: nowrap; }
+.ed-undo-toast .ut-undo:hover { filter: brightness(1.06); }
+.ed-undo-toast .ut-x { background: transparent; color: rgba(255,255,255,.6); border: none; cursor: pointer; font-size: 13px; padding: 4px 6px; }
+.ed-undo-toast .ut-x:hover { color: #fff; }
+
+/* ── Visite guidée (coachmarks) ───────────────────────────────────────── */
+.gt-root { position: fixed; inset: 0; z-index: 2000; }
+.gt-catch { position: fixed; inset: 0; background: transparent; cursor: default; }
+.gt-veil { position: fixed; inset: 0; background: rgba(10,12,16,.72); cursor: default; }
+.gt-spot { position: fixed; border-radius: 12px; pointer-events: none;
+  box-shadow: 0 0 0 9999px rgba(10,12,16,.72), 0 0 0 2px #E8A800, 0 0 24px 3px rgba(232,168,0,.55);
+  transition: top .25s cubic-bezier(.16,1,.3,1), left .25s, width .25s, height .25s; }
+.gt-bubble { position: fixed; z-index: 2001; width: min(360px, calc(100vw - 32px));
+  background: #fff; color: #11161d; border-radius: 16px; padding: 18px;
+  box-shadow: 0 24px 60px -16px rgba(0,0,0,.5); animation: gtIn .2s ease both; }
+@keyframes gtIn { from { opacity: 0; transform: translateX(-50%) translateY(6px); } }
+.gt-step { font-size: 11.5px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: #E8A800; }
+.gt-title { font-size: 17px; font-weight: 800; margin-top: 4px; }
+.gt-body { font-size: 13.5px; line-height: 1.55; color: #475063; margin-top: 7px; }
+.gt-bar { height: 4px; border-radius: 999px; background: #eceef3; margin: 14px 0 12px; overflow: hidden; }
+.gt-bar span { display: block; height: 100%; background: #E8A800; border-radius: 999px; transition: width .25s ease; }
+.gt-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.gt-skip { background: none; border: none; color: #8a93a6; font-size: 12.5px; cursor: pointer; padding: 6px; }
+.gt-skip:hover { color: #475063; }
+.gt-prev { background: #f1f3f7; border: none; color: #334; border-radius: 10px; padding: 9px 14px; font-weight: 700; font-size: 13px; cursor: pointer; }
+.gt-next { background: #11161d; border: none; color: #fff; border-radius: 10px; padding: 9px 16px; font-weight: 800; font-size: 13px; cursor: pointer; }
+.gt-next:hover { filter: brightness(1.1); }
+/* Déclencheur « ? Visite guidée » */
+.gt-trigger { display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 1px solid var(--line);
+  color: var(--ink2, #334); border-radius: 10px; padding: 7px 12px; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+.gt-trigger:hover { border-color: #E8A800; color: #11161d; }

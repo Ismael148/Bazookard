@@ -7,6 +7,7 @@ import Icon from "@/components/Icon";
 import { clientSession, clientLoginDb, type ClientSession, type ClientWs, type Permissions } from "@/lib/admin-db";
 import { getStats, getLeads, type Stats, type Lead } from "@/lib/tracking";
 import { CARD_THEMES } from "@/lib/types";
+import GuidedTour, { type TourStep } from "@/components/GuidedTour";
 
 const PERM_BADGES: { key: keyof Permissions; label: string }[] = [
   { key: "editText", label: "Textes & images" },
@@ -15,11 +16,24 @@ const PERM_BADGES: { key: keyof Permissions; label: string }[] = [
   { key: "viewLeads", label: "Leads" },
 ];
 
+const TOUR_SEEN = "bzk_tour_client";
+const CLIENT_TOUR: TourStep[] = [
+  { title: "Bienvenue dans votre espace 👋", body: "En moins d'une minute, découvrez comment gérer votre carte NFC. Vous pourrez revoir cette visite à tout moment grâce au bouton « ? Visite guidée »." },
+  { target: "[data-tour='edit-card']", title: "Modifier votre carte", body: "Cliquez ici pour ouvrir l'éditeur : textes, photos, horaires, boutons… tout se change en direct, sans compétence technique.", placement: "bottom" },
+  { target: "[data-tour='preview-card']", title: "Voir la carte en ligne", body: "Ce bouton ouvre votre carte exactement comme la voient vos clients quand ils tapent votre tag NFC ou scannent le QR code.", placement: "bottom" },
+  { target: "[data-tour='perms']", title: "Ce que vous pouvez modifier", body: "Les étiquettes vertes indiquent vos droits. Une étiquette avec un cadenas 🔒 est gérée par Adamkom — demandez-nous pour l'activer.", placement: "top" },
+  { target: "a[href='/client/stats']", title: "Vos performances", body: "Suivez les vues, les clics et les contacts générés par vos cartes, jour après jour.", placement: "bottom" },
+  { target: "a[href='/client/leads']", title: "Contacts & messages", body: "Retrouvez ici toutes les personnes qui vous ont laissé leurs coordonnées via votre carte. Une pastille vous signale les nouveaux.", placement: "bottom" },
+  { target: "a[href='/client/loyalty']", title: "Fidélité", body: "Gérez vos cartes de fidélité digitales pour récompenser vos clients réguliers.", placement: "bottom" },
+  { title: "Vous êtes prêt ✨", body: "Besoin d'aide ? Le bouton « ? Visite guidée » relance ce tour quand vous voulez. Bonne personnalisation !" },
+];
+
 export default function ClientHome() {
   const [sess, setSess] = useState<ClientSession | null>(null);
   const [extraStats, setExtraStats] = useState<Record<string, Stats>>({});
   const [extraLeads, setExtraLeads] = useState<Record<string, Lead[]>>({});
   const router = useRouter();
+  const [tour, setTour] = useState(false);
 
   useEffect(() => {
     const s = clientSession();
@@ -39,6 +53,16 @@ export default function ClientHome() {
       setExtraStats(st); setExtraLeads(ld);
     })();
   }, [router]);
+
+  // Lance automatiquement la visite guidée au tout premier passage.
+  useEffect(() => {
+    if (!sess || !sess.workspaces.length) return;
+    let seen = "0";
+    try { seen = localStorage.getItem(TOUR_SEEN) || "0"; } catch {}
+    if (seen !== "1") { const t = setTimeout(() => setTour(true), 700); return () => clearTimeout(t); }
+  }, [sess]);
+
+  const closeTour = () => { setTour(false); try { localStorage.setItem(TOUR_SEEN, "1"); } catch {} };
 
   if (!sess) return null;
 
@@ -62,6 +86,9 @@ export default function ClientHome() {
           <h1 style={{ fontSize: 22, fontWeight: 700 }}>Bonjour {sess.client.company} 👋</h1>
           <p style={{ color: "var(--muted)", fontSize: 13.5, marginTop: 2 }}>Vos cartes, vos statistiques et vos contacts — en temps réel.</p>
         </div>
+        <button className="gt-trigger" style={{ marginLeft: "auto" }} onClick={() => setTour(true)} title="Revoir la visite guidée">
+          <Icon name="help" size={16} /> Visite guidée
+        </button>
       </div>
 
       <div style={{ padding: 28, display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(300px,1fr))", gap: 16 }}>
@@ -85,7 +112,7 @@ export default function ClientHome() {
                 <div style={{ color: "var(--muted)", fontSize: 12.5 }}>
                   /{w.card?.slug ?? w.slug} {w.card ? `· ${w.card.blocks.length} blocs` : "· carte en préparation"}
                 </div>
-                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 12 }}>
+                <div data-tour="perms" style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 12 }}>
                   {PERM_BADGES.map((pb) => (
                     <span key={pb.key} className="a-badge" style={{
                       background: w.permissions[pb.key] ? "var(--accent-soft)" : "#F4F2EA",
@@ -104,12 +131,12 @@ export default function ClientHome() {
                 )}
                 <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
                   {w.card && (
-                    <Link href={`/client/editor/${w.card.id}`} className="a-btn a-btn-primary" style={{ flex: 1, justifyContent: "center" }}>
+                    <Link href={`/client/editor/${w.card.id}`} data-tour="edit-card" className="a-btn a-btn-primary" style={{ flex: 1, justifyContent: "center" }}>
                       <Icon name="edit" size={15} /> Modifier ma carte
                     </Link>
                   )}
                   {w.card && (
-                    <Link href={`/${w.card.slug}`} target="_blank" className="a-btn"><Icon name="eye" size={16} /></Link>
+                    <Link href={`/${w.card.slug}`} target="_blank" data-tour="preview-card" className="a-btn"><Icon name="eye" size={16} /></Link>
                   )}
                 </div>
               </div>
@@ -140,6 +167,8 @@ export default function ClientHome() {
           </div>
         )}
       </div>
+
+      <GuidedTour steps={CLIENT_TOUR} open={tour} onClose={closeTour} />
     </div>
   );
 }

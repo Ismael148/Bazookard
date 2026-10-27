@@ -27,7 +27,8 @@ export const planLabel = (p?: PlanKey): string => PLANS[p ?? "solo"]?.label ?? P
 
 export interface Permissions {
   editText: boolean;       // peut éditer textes & images
-  editStructure: boolean;  // peut ajouter / supprimer des sections
+  editStructure: boolean;  // peut ajouter / déplacer des sections + style
+  deleteBlocks?: boolean;  // peut supprimer des sections (annulable en 1 clic)
   publish: boolean;        // peut publier / dépublier
   viewLeads: boolean;      // peut voir leads & analytics
 }
@@ -58,7 +59,7 @@ const TK = "karte_templates";
 const SK = "karte_admin_session";
 
 const uid = () => Math.random().toString(36).slice(2, 10);
-export const defaultPerms = (): Permissions => ({ editText: true, editStructure: false, publish: false, viewLeads: true });
+export const defaultPerms = (): Permissions => ({ editText: true, editStructure: false, deleteBlocks: false, publish: false, viewLeads: true });
 
 function get<T>(key: string, seed: T[]): T[] {
   if (typeof window === "undefined") return [];

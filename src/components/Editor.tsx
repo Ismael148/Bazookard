@@ -14,11 +14,21 @@ import CardRenderer from "./CardRenderer";
 import ImageInput from "./ImageInput";
 import { uploadImage } from "@/lib/upload";
 import ConfirmModal from "./ConfirmModal";
+import GuidedTour, { type TourStep } from "./GuidedTour";
 
 type Dict = Record<string, unknown>;
 type Sel = string | "style" | null;
 
-const FULL: Permissions = { editText: true, editStructure: true, publish: true, viewLeads: true };
+const FULL: Permissions = { editText: true, editStructure: true, deleteBlocks: true, publish: true, viewLeads: true };
+
+const EDITOR_TOUR_SEEN = "bzk_tour_editor";
+const EDITOR_TOUR: TourStep[] = [
+  { title: "L'éditeur de votre carte 🛠️", body: "Trois zones : vos sections à gauche, l'aperçu en direct au centre, les réglages à droite. On fait le tour en 30 secondes." },
+  { target: ".ed-side", title: "Vos sections", body: "Chaque ligne est une section de votre carte (profil, horaires, boutons…). Cliquez une section pour ouvrir ses réglages à droite.", placement: "bottom" },
+  { target: ".ed-phone", title: "Aperçu en direct", body: "Tout ce que vous modifiez s'affiche ici immédiatement — exactement comme le verra la personne qui tape votre tag NFC.", placement: "top" },
+  { title: "Supprimer en toute sérénité", body: "Pour retirer une section, survolez-la et cliquez la croix ✕. Pas de panique : un bandeau « ↩ Annuler » apparaît et le bouton « ↩ Annuler » en haut restaure tout en un seul clic." },
+  { target: "[data-tour='share']", title: "Partager votre carte", body: "Copiez le lien de votre carte ou partagez-le directement par WhatsApp et email. Pensez à enregistrer vos changements.", placement: "bottom" },
+];
 
 export default function Editor({ initial, perms = FULL, backHref = "/dashboard", backLabel = "Tableau de bord", onLogout, onSave }: {
   initial: Card; perms?: Permissions; backHref?: string; backLabel?: string; onLogout?: () => void; onSave?: (c: Card) => void;
@@ -30,11 +40,44 @@ export default function Editor({ initial, perms = FULL, backHref = "/dashboard",
   const [tplConfirm, setTplConfirm] = useState<CardTemplate | null>(null);
   const [toDelete, setToDelete] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  // Historique pour l'annulation en 1 clic (suppression de section, application de modèle…)
+  const [history, setHistory] = useState<Card[]>([]);
+  const [undoToast, setUndoToast] = useState<string | null>(null);
+  // Droit de suppression : accordé par « éditer la structure » OU par la permission dédiée.
+  const canDelete = perms.editStructure || !!perms.deleteBlocks;
+
+  // Le bandeau « Annuler » disparaît tout seul après quelques secondes.
+  useEffect(() => {
+    if (!undoToast) return;
+    const t = setTimeout(() => setUndoToast(null), 8000);
+    return () => clearTimeout(t);
+  }, [undoToast]);
+
+  const [tourOpen, setTourOpen] = useState(false);
+  // Visite guidée de l'éditeur : automatique au 1er passage d'un client.
+  useEffect(() => {
+    if (!onLogout) return; // contexte client (l'espace admin ne l'auto-lance pas)
+    let seen = "0";
+    try { seen = localStorage.getItem(EDITOR_TOUR_SEEN) || "0"; } catch {}
+    if (seen !== "1") { const t = setTimeout(() => setTourOpen(true), 800); return () => clearTimeout(t); }
+  }, [onLogout]);
+  const closeTour = () => { setTourOpen(false); try { localStorage.setItem(EDITOR_TOUR_SEEN, "1"); } catch {} };
+
+  function pushHistory() { setHistory((h) => [...h.slice(-29), card]); }
+  function undo() {
+    if (!history.length) return;
+    const prev = history[history.length - 1];
+    setHistory(history.slice(0, -1));
+    commit(prev);
+    if (sel && sel !== "style" && !prev.blocks.some((b) => b.id === sel)) setSel(null);
+    setUndoToast(null);
+  }
 
   /** Applique un modèle : remplace les blocs + le thème de la carte courante (garde id/slug). */
   function applyTemplate(tpl: CardTemplate) {
     if (!perms.editStructure) return;
     const blocks = templateBlocks(tpl, uid);
+    pushHistory();
     commit({ ...card, themeIndex: tpl.themeIndex, custom: undefined, blocks });
     setSel(blocks[0]?.id ?? null);
     setPicking(false);
@@ -63,9 +106,13 @@ export default function Editor({ initial, perms = FULL, backHref = "/dashboard",
     setAdding(false);
   }
   function removeBlock(id: string) {
-    if (!perms.editStructure) return;
+    if (!canDelete) return;
+    const blk = card.blocks.find((b) => b.id === id);
+    const nm = blk ? String((blk.data as Dict).__name ?? BLOCK_MAP[blk.type]?.name ?? "Section") : "Section";
+    pushHistory();
     commit({ ...card, blocks: card.blocks.filter((b) => b.id !== id) });
     if (sel === id) setSel(null);
+    setUndoToast(`Section « ${nm} » supprimée`);
   }
   function setCustom(patch: Partial<CardCustom>) {
     if (!perms.editStructure) return;
@@ -124,6 +171,17 @@ export default function Editor({ initial, perms = FULL, backHref = "/dashboard",
         </div>
       </div>
 
+      <GuidedTour steps={EDITOR_TOUR} open={tourOpen} onClose={closeTour} />
+
+      {undoToast && (
+        <div className="ed-undo-toast" role="status">
+          <span className="ut-ic">🗑</span>
+          <span className="ut-msg">{undoToast}</span>
+          <button className="ut-undo" onClick={undo}>↩ Annuler</button>
+          <button className="ut-x" onClick={() => setUndoToast(null)} aria-label="Fermer">✕</button>
+        </div>
+      )}
+
       {toDelete && (
         <ConfirmModal dark
           message={`Supprimer le bloc « ${BLOCK_MAP[card.blocks.find((b) => b.id === toDelete)?.type ?? "headline"]?.name ?? ""} » ?`}
@@ -148,11 +206,18 @@ export default function Editor({ initial, perms = FULL, backHref = "/dashboard",
             commit({ ...card, slug: RESERVED.includes(v) ? v + "-1" : v });
           }}
         />
-        <button className="btn" style={{ padding: "6px 11px", fontSize: 12.5 }} onClick={copyLink}>{copied ? "✓ Copié !" : "🔗 Copier le lien"}</button>
+        <button className="btn" data-tour="share" style={{ padding: "6px 11px", fontSize: 12.5 }} onClick={copyLink}>{copied ? "✓ Copié !" : "🔗 Copier le lien"}</button>
         <a className="btn" style={{ padding: "6px 11px", fontSize: 12.5 }} target="_blank" rel="noopener"
           href={`https://wa.me/?text=${encodeURIComponent("Découvrez ma carte : " + publicUrl)}`}>Partager WhatsApp</a>
         <a className="btn" style={{ padding: "6px 11px", fontSize: 12.5 }}
           href={`mailto:?subject=${encodeURIComponent("Ma carte " + card.title)}&body=${encodeURIComponent("Découvrez ma carte : " + publicUrl)}`}>Partager Email</a>
+        <button className="btn" style={{ padding: "6px 11px", fontSize: 12.5 }} onClick={() => setTourOpen(true)} title="Revoir la visite guidée">? Visite guidée</button>
+        {canDelete && history.length > 0 && (
+          <button className="btn" style={{ padding: "6px 11px", fontSize: 12.5, fontWeight: 700, borderColor: "#f8b4b4", color: "#b91c1c" }}
+            onClick={undo} title="Annuler la dernière suppression ou le dernier remplacement">
+            ↩ Annuler
+          </button>
+        )}
         {onLogout && (
           <button className="btn btn-ghost" style={{ marginLeft: "auto", padding: "6px 11px", fontSize: 12.5 }} onClick={onLogout}>
             Déconnexion
@@ -185,11 +250,11 @@ export default function Editor({ initial, perms = FULL, backHref = "/dashboard",
                 <span style={{ cursor: perms.editStructure ? "grab" : undefined }} title="Glisser pour déplacer">⠿</span>
                 <span>{def.icon}</span>
                 <span className="nm">{String((b.data as Dict).__name ?? def.name)}</span>
-                {perms.editStructure && (
+                {(perms.editStructure || canDelete) && (
                   <span className="acts" onClick={(e) => e.stopPropagation()}>
-                    <button onClick={() => move(b.id, -1)} disabled={idx === 0} style={mini} title="Monter">↑</button>
-                    <button onClick={() => move(b.id, 1)} disabled={idx === card.blocks.length - 1} style={mini} title="Descendre">↓</button>
-                    <button onClick={() => setToDelete(b.id)} style={{ ...mini, color: "#f87171" }} title="Supprimer">✕</button>
+                    {perms.editStructure && <button onClick={() => move(b.id, -1)} disabled={idx === 0} style={mini} title="Monter">↑</button>}
+                    {perms.editStructure && <button onClick={() => move(b.id, 1)} disabled={idx === card.blocks.length - 1} style={mini} title="Descendre">↓</button>}
+                    {canDelete && <button onClick={() => setToDelete(b.id)} style={{ ...mini, color: "#f87171" }} title="Supprimer">✕</button>}
                   </span>
                 )}
               </div>
@@ -595,7 +660,7 @@ export default function Editor({ initial, perms = FULL, backHref = "/dashboard",
                   </label>
                 </div>
 
-                {perms.editStructure && (
+                {canDelete && (
                   <button className="btn btn-ghost" style={{ justifyContent: "center", color: "#f87171", borderStyle: "dashed" }}
                     onClick={() => setToDelete(selBlock.id)}>
                     🗑 Supprimer cette section

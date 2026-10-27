@@ -17,7 +17,8 @@ import { saveCard } from "@/lib/db";
 
 const PERM_LABELS: { key: keyof Permissions; label: string }[] = [
   { key: "editText", label: "Éditer textes & images" },
-  { key: "editStructure", label: "Ajouter / supprimer des sections" },
+  { key: "editStructure", label: "Ajouter / déplacer des sections + style" },
+  { key: "deleteBlocks", label: "Supprimer des sections (annulable en 1 clic)" },
   { key: "publish", label: "Publier / dépublier" },
   { key: "viewLeads", label: "Voir leads & analytics" },
 ];

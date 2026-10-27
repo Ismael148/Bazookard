@@ -17,6 +17,7 @@ export default function ClientsPage() {
   const [reveal, setReveal] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [toDelete, setToDelete] = useState<Client | null>(null);
+  const [mailFor, setMailFor] = useState<Client | null>(null);
 
   const refresh = () => { void (async () => { setClients(await listClients()); setWss(await listWorkspaces()); })(); };
   useEffect(refresh, []);
@@ -80,13 +81,10 @@ export default function ClientsPage() {
                   </td>
                   <td style={{ color: "var(--muted)", fontSize: 13 }}>{new Date(c.createdAt).toLocaleDateString("fr-FR")}</td>
                   <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
-                    <a className="a-btn a-btn-sm a-btn-primary" style={{ marginRight: 6 }}
-                      href={`mailto:${c.email}?subject=${encodeURIComponent("Vos accès Bazookard — " + c.company)}&body=${encodeURIComponent(
-                        `Bonjour,\n\nVotre espace Bazookard est prêt ! Vous pouvez modifier votre carte NFC à tout moment :\n\nLien : ${typeof window !== "undefined" ? window.location.origin : ""}/client/login\nEmail : ${c.email}\nMot de passe : ${c.password}\n\nÀ très vite,\nL'équipe Bazookard — by Adamkom & JJP`
-                      )}`}
-                      title="Envoyer les accès par email">
+                    <button className="a-btn a-btn-sm a-btn-primary" style={{ marginRight: 6 }}
+                      onClick={() => setMailFor(c)} title="Modifier puis envoyer les accès par email">
                       <Icon name="export" size={14} /> Envoyer les accès
-                    </a>
+                    </button>
                     <button className="a-btn a-btn-sm a-btn-danger" onClick={() => setToDelete(c)} title="Supprimer ce client">
                       <Icon name="trash" size={15} />
                     </button>
@@ -104,6 +102,7 @@ export default function ClientsPage() {
       </div>
 
       {open && <ClientModal onClose={() => setOpen(false)} onCreated={() => { refresh(); notify("Client créé — identifiants prêts à envoyer"); }} />}
+      {mailFor && <AccessMailModal client={mailFor} onClose={() => setMailFor(null)} onSent={() => notify("Accès envoyés par email ✓")} />}
       {toDelete && (
         <ConfirmModal
           message={`Supprimer le client « ${toDelete.company} » et retirer son accès au back-office ?`}
@@ -164,6 +163,75 @@ function ClientModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
           </div>
           <button className="a-btn a-btn-primary" style={{ justifyContent: "center" }} type="submit">Créer l'accès</button>
         </form>
+      </div>
+    </div>
+  );
+}
+
+function AccessMailModal({ client, onClose, onSent }: { client: Client; onClose: () => void; onSent: () => void }) {
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const loginUrl = `${origin}/client/login`;
+  const [to, setTo] = useState(client.email);
+  const [subject, setSubject] = useState(`Vos accès Bazookard \u2014 ${client.company}`);
+  const [body, setBody] = useState(
+    `Bonjour,\n\nVotre espace Bazookard est prêt ! Vous pouvez modifier votre carte NFC à tout moment :\n\nLien : ${loginUrl}\nEmail : ${client.email}\nMot de passe : ${client.password}\n\nÀ très vite,\nL'équipe Bazookard — by Adamkom & JJP`
+  );
+  const [state, setState] = useState<"idle" | "sending" | "ok" | "error">("idle");
+  const [error, setError] = useState("");
+
+  async function send() {
+    setState("sending"); setError("");
+    try {
+      const res = await fetch("/api/send-access", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ to, subject, text: body }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data.error || `Erreur ${res.status}`);
+      setState("ok");
+      onSent();
+      setTimeout(onClose, 900);
+    } catch (e) {
+      setState("error");
+      setError(e instanceof Error ? e.message : "Échec de l'envoi");
+    }
+  }
+
+  const mailtoHref = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+  return (
+    <div className="a-overlay" onClick={onClose}>
+      <div className="a-modal" style={{ maxWidth: 580 }} onClick={(e) => e.stopPropagation()}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+          <h3 style={{ fontSize: 18, fontWeight: 700 }}>Envoyer les accès</h3>
+          <button className="a-btn a-btn-sm" style={{ padding: 6 }} onClick={onClose}><Icon name="x" size={16} /></button>
+        </div>
+        <p style={{ color: "var(--muted)", fontSize: 13, marginBottom: 14 }}>
+          Relisez et modifiez le message avant l&apos;envoi. L&apos;email part depuis le serveur mail d&apos;Adamkom.
+        </p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div><label className="a-label">Destinataire</label><input className="a-input" type="email" value={to} onChange={(e) => setTo(e.target.value)} /></div>
+          <div><label className="a-label">Objet</label><input className="a-input" value={subject} onChange={(e) => setSubject(e.target.value)} /></div>
+          <div>
+            <label className="a-label">Message</label>
+            <textarea className="a-input" value={body} onChange={(e) => setBody(e.target.value)} rows={10}
+              style={{ resize: "vertical", fontFamily: "inherit", lineHeight: 1.5, minHeight: 180 }} />
+          </div>
+          {state === "error" && (
+            <div style={{ background: "#FDECEC", color: "#B3261E", borderRadius: 10, padding: "10px 12px", fontSize: 12.5 }}>
+              ⚠ {error}. Vérifiez la configuration SMTP (variables d&apos;environnement), ou passez par votre messagerie :{" "}
+              <a href={mailtoHref} style={{ color: "#B3261E", fontWeight: 700 }}>ouvrir dans ma messagerie</a>.
+            </div>
+          )}
+          <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", alignItems: "center", flexWrap: "wrap" }}>
+            <a className="a-btn a-btn-sm" href={mailtoHref} title="Ouvrir le brouillon dans votre logiciel de messagerie">Ouvrir dans ma messagerie</a>
+            <button className="a-btn a-btn-primary" disabled={state === "sending" || !to} onClick={send}
+              style={{ minWidth: 160, justifyContent: "center" }}>
+              {state === "sending" ? "Envoi…" : state === "ok" ? "✓ Envoyé" : "📤 Envoyer l'email"}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
