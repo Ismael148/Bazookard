@@ -384,6 +384,24 @@ export default function Editor({ initial, perms = FULL, backHref = "/dashboard",
                 </div>
                 <ColorField label="Couleur du voile du hero" value={card.custom?.overlayColor || "#0A0A0C"}
                   onChange={(v) => setCustom({ overlayColor: v })} onReset={() => setCustom({ overlayColor: undefined })} />
+                <div style={{ gridColumn: "1/-1", height: 1, background: "var(--line)", margin: "2px 0" }} />
+                <div style={{ gridColumn: "1/-1", fontSize: 12, fontWeight: 700, color: "var(--txt)" }}>👤 Profil (en-tête)</div>
+                <div>
+                  <label className="lbl">Alignement du contenu du profil</label>
+                  <select className="in" value={card.custom?.heroAlign || ""}
+                    onChange={(e) => setCustom({ heroAlign: e.target.value as NonNullable<CardCustom["heroAlign"]> })}>
+                    <option value="">Aligné à gauche (défaut)</option>
+                    <option value="center">Centré</option>
+                  </select>
+                </div>
+                <div />
+                <ColorField label="Fond des modules du profil (chips, contact)" value={card.custom?.heroPillBg || "#ffffff"}
+                  onChange={(v) => setCustom({ heroPillBg: v })} onReset={() => setCustom({ heroPillBg: undefined })} />
+                <ColorField label="Texte des modules du profil" value={card.custom?.heroPillInk || "#ffffff"}
+                  onChange={(v) => setCustom({ heroPillInk: v })} onReset={() => setCustom({ heroPillInk: undefined })} />
+                <p style={{ gridColumn: "1/-1", fontSize: 11.5, color: "var(--muted)", marginTop: -2 }}>
+                  Change la couleur de l&apos;arrière-plan des pastilles du profil (métier, téléphone, adresse…) pour faire ressortir le texte. ↺ pour revenir au style verre dépoli.
+                </p>
                 <div />
                 <div>
                   <label className="lbl">Taille du QR code : {card.custom?.qrSize ?? 172}px</label>

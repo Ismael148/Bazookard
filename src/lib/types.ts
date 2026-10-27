@@ -46,6 +46,9 @@ export interface CardCustom {
   bgFit?: "" | "cover" | "contain";                          // ajustement de l'image de fond
   bgAttach?: "" | "fixed" | "scroll";                        // image de fond fixe ou qui défile
   noHeroImage?: boolean;                                      // ne PAS utiliser la photo/bannière comme grande image d'en-tête
+  heroAlign?: "" | "left" | "center";                        // alignement du contenu du hero (profil)
+  heroPillBg?: string;                                        // fond des modules du hero (chips, pastilles contact)
+  heroPillInk?: string;                                       // couleur du texte des modules du hero
 }
 
 export const CARD_FONTS: Record<string, { label: string; stack: string }> = {

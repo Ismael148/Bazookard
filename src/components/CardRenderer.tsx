@@ -810,15 +810,38 @@ export default function CardRenderer({ card, actions }: { card: Card; actions?: 
     ...(custom?.align ? { textAlign: custom.align } : {}),
   } as React.CSSProperties;
 
-  const profile = card.blocks.find((b) => b.type === "profile")?.data as Dict | undefined;
-  const banner = card.blocks.find((b) => b.type === "banner")?.data as Dict | undefined;
-  const avatarBlk = card.blocks.find((b) => b.type === "avatar")?.data as Dict | undefined;
-  // Avatar du haut de carte : l'image du bloc « Avatar » (logo, personne…) en priorité,
-  // sinon la photo de profil en secours.
-  // Priorité à un logo dédié (champ « Logo » du profil) pour le petit rond en haut,
-  // sinon l'avatar du bloc Avatar, sinon la photo d'en-tête.
+  // ────────────────────────────────────────────────────────────────────────
+  // ZONE D'EN-TÊTE (hero) — correctif « les images remontent en haut du profil »
+  // Avant, le hero absorbait le 1er bloc Bannière / Avatar / Réseaux trouvé N'IMPORTE OÙ
+  // dans la carte (.find ignore la position). Résultat : une image ajoutée dans un
+  // nouveau bloc EN BAS devenait le fond du hero EN HAUT.
+  // Désormais le hero n'absorbe un bloc Bannière / Avatar / Réseaux QUE s'il fait partie
+  // de la suite de blocs d'identité tout en haut de la carte, AVANT le 1er bloc de contenu.
+  // Un bloc image ajouté plus bas reste à sa place. Le Profil, lui, reste toujours l'en-tête
+  // (il n'y en a normalement qu'un). On note les blocs réellement absorbés par leur id.
+  const IDENTITY = ["profile", "banner", "avatar", "social"];
+  let headerEnd = 0;
+  while (headerEnd < card.blocks.length && IDENTITY.includes(card.blocks[headerEnd].type)) headerEnd++;
+  const headerZone = card.blocks.slice(0, headerEnd);
+  const absorbedIds = new Set<string>();
+
+  // Le Profil définit toujours l'en-tête, où qu'il soit placé.
+  const profileBlk = headerZone.find((b) => b.type === "profile") || card.blocks.find((b) => b.type === "profile");
+  if (profileBlk) absorbedIds.add(profileBlk.id);
+  const profile = profileBlk?.data as Dict | undefined;
+
+  // Bannière / Avatar / Réseaux : uniquement s'ils sont dans la zone d'en-tête (tout en haut).
+  const headerPick = (type: string) => {
+    const b = headerZone.find((x) => x.type === type);
+    if (b) { absorbedIds.add(b.id); return b.data as Dict; }
+    return undefined;
+  };
+  const banner = headerPick("banner");
+  const avatarBlk = headerPick("avatar");
+  const socialBlk = headerPick("social");
+
+  // Avatar du haut de carte : logo du profil en priorité, sinon bloc Avatar, sinon photo.
   const heroAvatar = s(profile?.logo) || s(avatarBlk?.image) || s(profile?.photo);
-  const socialBlk = card.blocks.find((b) => b.type === "social")?.data as Dict | undefined;
   const socialItems = arr(socialBlk?.items).filter((i) => s(i.url));
   const hasChatbot = card.blocks.some((b) => b.type === "chatbot");
   const chatbotGreeting = s((card.blocks.find((b) => b.type === "chatbot")?.data as Dict | undefined)?.greeting);
@@ -828,17 +851,11 @@ export default function CardRenderer({ card, actions }: { card: Card; actions?: 
   const heroImg = custom?.noHeroImage ? "" : (s(banner?.image) || s(profile?.photo));
   const name = s(profile?.name) || card.title;
   const chips = [s(profile?.title), s(profile?.company)].filter(Boolean);
+  const heroAlign = custom?.heroAlign || "";
 
-  // Sections = tous les blocs sauf ceux absorbés par le hero (1er profile / 1er banner) et le chatbot
-  let heroProfileUsed = false;
-  let heroBannerUsed = false;
-  let heroAvatarUsed = false;
-  let heroSocialUsed = false;
+  // Sections = tous les blocs sauf ceux absorbés par le hero, le chatbot et les séparateurs.
   const sections = card.blocks.filter((b) => {
-    if (b.type === "profile" && !heroProfileUsed) { heroProfileUsed = true; return false; }
-    if (b.type === "banner" && !heroBannerUsed) { heroBannerUsed = true; return false; }
-    if (b.type === "avatar" && !heroAvatarUsed) { heroAvatarUsed = true; return false; }
-    if (b.type === "social" && !heroSocialUsed) { heroSocialUsed = true; return false; }
+    if (absorbedIds.has(b.id)) return false;
     if (b.type === "chatbot" || b.type === "splitter") return false;
     return true;
   });
@@ -857,12 +874,14 @@ export default function CardRenderer({ card, actions }: { card: Card; actions?: 
       {bgImage && <div className="kc-bg-ov" style={{ opacity: bgOv }} />}
       {/* HERO */}
       <div
-        className="kc-hero"
+        className={`kc-hero${heroAlign === "center" ? " kc-hero--center" : ""}`}
         style={{
           ...(heroImg
             ? { backgroundImage: `url('${heroImg}')` }
             : { background: `linear-gradient(150deg, ${t.accent}, ${t.accent2})` }),
           ...(typeof custom?.heroHeight === "number" ? { minHeight: custom.heroHeight } : {}),
+          ...(custom?.heroPillBg ? { ["--c-herobg" as string]: custom.heroPillBg } : {}),
+          ...(custom?.heroPillInk ? { ["--c-heroink" as string]: custom.heroPillInk } : {}),
         }}
       >
         <div className="kc-hero-ov" />
@@ -871,8 +890,9 @@ export default function CardRenderer({ card, actions }: { card: Card; actions?: 
           {heroAvatar && (() => {
             const av = custom || {};
             const size = typeof av.avatarSize === "number" ? Math.min(130, Math.max(50, av.avatarSize)) : 74;
-            const ml = av.avatarPos === "droite" || av.avatarPos === "centre" ? "auto" : "0";
-            const mr = av.avatarPos === "centre" ? "auto" : av.avatarPos === "droite" ? "0" : "auto";
+            const apos = av.avatarPos || (heroAlign === "center" ? "centre" : "");
+            const ml = apos === "droite" || apos === "centre" ? "auto" : "0";
+            const mr = apos === "centre" ? "auto" : apos === "droite" ? "0" : "auto";
             return (
               <div className="kc-avatar" style={{
                 width: size, height: size, marginLeft: ml, marginRight: mr, marginBottom: 12,
