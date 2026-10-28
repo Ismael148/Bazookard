@@ -28,7 +28,8 @@ export default function PublicCard({ slug }: { slug: string }) {
 
   useEffect(() => {
     if (!card) return;
-    const ink = resolveTheme(card).ink;
+    // Couleur principale du QR : réglage libre, sinon couleur du texte du thème.
+    const ink = (card.custom?.qrColor && /^#([0-9a-f]{3,8})$/i.test(card.custom.qrColor)) ? card.custom.qrColor : resolveTheme(card).ink;
     // niveau H : tolère le logo au centre sans casser la lecture du QR
     QRCode.toDataURL(window.location.href, { width: 320, margin: 1, errorCorrectionLevel: "H", color: { dark: ink, light: "#ffffff" } })
       .then(setQr).catch(() => {});
@@ -66,7 +67,7 @@ export default function PublicCard({ slug }: { slug: string }) {
       phone && `TEL;TYPE=CELL:${phone}`,
       email && `EMAIL:${email}`,
       addr && `ADR;TYPE=WORK:;;${addr.replace(/,/g, ";")};;;;`,
-      g(contact, "website") && `URL:${g(contact, "website")}`,
+      (g(profile, "website") || g(contact, "website")) && `URL:${g(profile, "website") || g(contact, "website")}`,
       "END:VCARD"].filter(Boolean).join("\n");
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([v], { type: "text/vcard" }));

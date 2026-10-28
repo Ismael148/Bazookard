@@ -49,6 +49,10 @@ export interface CardCustom {
   heroAlign?: "" | "left" | "center";                        // alignement du contenu du hero (profil)
   heroPillBg?: string;                                        // fond des modules du hero (chips, pastilles contact)
   heroPillInk?: string;                                       // couleur du texte des modules du hero
+  heroPillFlat?: boolean;                                     // pastilles du hero sans fond (texte seul)
+  saveBtnBg?: string;                                         // fond du bouton « Enregistrer le contact »
+  saveBtnInk?: string;                                        // couleur du texte du bouton « Enregistrer le contact »
+  qrColor?: string;                                           // couleur principale (sombre) du QR code
 }
 
 export const CARD_FONTS: Record<string, { label: string; stack: string }> = {

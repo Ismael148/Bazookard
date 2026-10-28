@@ -467,13 +467,23 @@ export default function Editor({ initial, perms = FULL, backHref = "/dashboard",
                 <p style={{ gridColumn: "1/-1", fontSize: 11.5, color: "var(--muted)", marginTop: -2 }}>
                   Change la couleur de l&apos;arrière-plan des pastilles du profil (métier, téléphone, adresse…) pour faire ressortir le texte. ↺ pour revenir au style verre dépoli.
                 </p>
+                <label style={{ gridColumn: "1/-1", display: "flex", alignItems: "center", gap: 7, fontSize: 12.5, color: "var(--muted)", cursor: "pointer" }}>
+                  <input type="checkbox" checked={card.custom?.heroPillFlat === true}
+                    onChange={(e) => setCustom({ heroPillFlat: e.target.checked })} style={{ accentColor: "#E8A800" }} />
+                  Pastilles du profil sans fond (texte seul, téléphone / email / adresse)
+                </label>
+                <ColorField label="Fond du bouton « Enregistrer le contact »" value={card.custom?.saveBtnBg || "#E8A800"}
+                  onChange={(v) => setCustom({ saveBtnBg: v })} onReset={() => setCustom({ saveBtnBg: undefined })} />
+                <ColorField label="Texte du bouton « Enregistrer le contact »" value={card.custom?.saveBtnInk || "#ffffff"}
+                  onChange={(v) => setCustom({ saveBtnInk: v })} onReset={() => setCustom({ saveBtnInk: undefined })} />
                 <div />
                 <div>
                   <label className="lbl">Taille du QR code : {card.custom?.qrSize ?? 172}px</label>
                   <input type="range" min={120} max={260} step={4} value={card.custom?.qrSize ?? 172}
                     onChange={(e) => setCustom({ qrSize: Number(e.target.value) })} style={{ width: "100%", accentColor: "#E8A800" }} />
                 </div>
-                <div />
+                <ColorField label="Couleur principale du QR code" value={card.custom?.qrColor || cardTheme(card.themeIndex).ink}
+                  onChange={(v) => setCustom({ qrColor: v })} onReset={() => setCustom({ qrColor: undefined })} />
                 <div>
                   <label className="lbl">Marge au-dessus du QR : {card.custom?.qrMt ?? 0}px</label>
                   <input type="range" min={0} max={60} value={card.custom?.qrMt ?? 0}
@@ -573,6 +583,21 @@ export default function Editor({ initial, perms = FULL, backHref = "/dashboard",
                         style={{ width: "100%", accentColor: "#E8A800" }} />
                       <p style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 4 }}>
                         0 = l&apos;utilisateur fait défiler lui-même. Sinon, les images défilent toutes seules au rythme choisi.
+                      </p>
+                    </div>
+                  );
+                })()}
+
+                {def.type === "testimonial" && (() => {
+                  const sec = Number((selBlock.data as Dict).__slideSec ?? 0);
+                  return (
+                    <div>
+                      <label className="lbl">⏱ Défilement automatique des avis : {sec > 0 ? `toutes les ${sec}s` : "manuel (glisser)"}</label>
+                      <input type="range" min={0} max={10} step={1} value={sec} disabled={!perms.editText}
+                        onChange={(e) => updateBlock(selBlock.id, { ...(selBlock.data as Dict), __slideSec: Number(e.target.value) })}
+                        style={{ width: "100%", accentColor: "#E8A800" }} />
+                      <p style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 4 }}>
+                        À partir de 2 avis, ils défilent horizontalement. 0 = défilement manuel ; sinon ils défilent tout seuls.
                       </p>
                     </div>
                   );

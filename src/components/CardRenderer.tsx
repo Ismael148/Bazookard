@@ -12,6 +12,8 @@ import SubscribeBlock from "./SubscribeBlock";
 import ReservationBlock from "./ReservationBlock";
 import FormBlock from "./FormBlock";
 import CarouselBlock from "./CarouselBlock";
+import GalleryBlock from "./GalleryBlock";
+import AutoScrollRow from "./AutoScrollRow";
 
 type Dict = Record<string, unknown>;
 const s = (v: unknown) => (typeof v === "string" ? v : "");
@@ -108,25 +110,17 @@ function renderBlock(block: Block, cardId: string, custom?: Card["custom"]): Rea
           <p style={{ color: "var(--c-soft)", fontSize: 13.5, lineHeight: 1.5 }}>{s(d.text)}</p>
         </div>
       );
-    case "gallery": {
-      // Une image devient cliquable si un lien est renseigné
-      const wrap = (node: React.ReactNode, url: string, k: number) =>
-        url ? <a key={k} href={url} target="_blank" rel="noopener" style={{ display: "block" }}>{node}</a> : <span key={k} style={{ display: "block" }}>{node}</span>;
-      if (orig) {
-        return (
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {arr(d.items).filter((i) => s(i.image)).map((i, k) => wrap(
-              <img src={s(i.image)} alt="" style={{ width: "100%", height: "auto", display: "block", borderRadius: 12, boxShadow: imShadow }} />, s(i.url), k))}
-          </div>
-        );
-      }
+    case "gallery":
       return (
-        <div style={{ display: "grid", gridTemplateColumns: `repeat(${galCols}, 1fr)`, gap: 7 }}>
-          {arr(d.items).filter((i) => s(i.image)).map((i, k) => wrap(
-            <img src={s(i.image)} alt="" style={{ width: "100%", aspectRatio: bratio || (round ? "1" : ratio || "1"), objectFit: "cover", borderRadius: round ? "50%" : 10, boxShadow: imShadow }} />, s(i.url), k))}
-        </div>
+        <GalleryBlock
+          items={arr(d.items)}
+          orig={orig}
+          cols={galCols}
+          aspect={bratio || (round ? "1" : ratio || "1")}
+          round={round}
+          shadow={imShadow}
+        />
       );
-    }
     case "carousel": {
       // orig = image pleine largeur à sa taille naturelle (1 par vue, défilement).
       const imgStyle = (): React.CSSProperties => orig
@@ -246,54 +240,48 @@ function renderBlock(block: Block, cardId: string, custom?: Card["custom"]): Rea
       const style = s(d.style).toLowerCase();
       const items = arr(d.items).filter((i) => s(i.text));
       if (!items.length) return null;
-      if (style.startsWith("bulle")) {
-        // Style bulles de chat
-        return (
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {items.map((i, k) => (
-              <div key={k} style={{ display: "flex", gap: 10, alignItems: "flex-end" }}>
-                <span style={{ width: 34, height: 34, borderRadius: "50%", flexShrink: 0, background: s(i.avatar) ? `url('${s(i.avatar)}') center/cover` : "linear-gradient(135deg, var(--c-accent), var(--c-accent2))", display: "grid", placeItems: "center", color: "var(--c-accent-ink)", fontSize: 13, fontWeight: 800 }}>
-                  {!s(i.avatar) && (s(i.name)[0] || "★")}
-                </span>
-                <div style={{ background: "var(--c-bg)", borderRadius: "16px 16px 16px 4px", padding: "10px 13px", border: "1px solid var(--c-line)" }}>
-                  <p style={{ fontSize: 13.5, lineHeight: 1.5 }}>{s(i.text)}</p>
-                  <div style={{ fontSize: 11.5, fontWeight: 700, color: "var(--c-soft)", marginTop: 4 }}>{s(i.name)}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        );
-      }
-      if (style.startsWith("etoile") || style.startsWith("étoile")) {
-        // Style notes 5 étoiles centrées
-        return (
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {items.map((i, k) => (
-              <div key={k} style={{ textAlign: "center", padding: "14px 12px", background: "var(--c-bg)", borderRadius: 16 }}>
-                <div style={{ fontSize: 15, letterSpacing: 2, marginBottom: 6 }}>⭐⭐⭐⭐⭐</div>
-                <p style={{ fontSize: 13.5, fontStyle: "italic", lineHeight: 1.55, color: "var(--c-soft)" }}>“{s(i.text)}”</p>
-                <div style={{ fontSize: 12.5, fontWeight: 700, marginTop: 8 }}>— {s(i.name)}</div>
-              </div>
-            ))}
-          </div>
-        );
-      }
-      // Style cartes (défaut)
-      return (
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {items.map((i, k) => (
-            <div key={k} style={{ background: "var(--c-bg)", borderRadius: 14, padding: 13, display: "flex", gap: 11 }}>
-              <span style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, background: s(i.avatar) ? `url('${s(i.avatar)}') center/cover` : "linear-gradient(135deg, var(--c-accent), var(--c-accent2))", display: "grid", placeItems: "center", color: "var(--c-accent-ink)", fontSize: 15, fontWeight: 800 }}>
+      // Défilement auto réglable (__slideSec, en secondes ; 0 = défilement manuel)
+      const slideMs = Math.max(0, Math.round(Number(d.__slideSec) || 0)) * 1000;
+      const bubble = style.startsWith("bulle");
+      const stars = style.startsWith("etoile") || style.startsWith("étoile");
+      const cards = items.map((i, k) => {
+        if (bubble) {
+          return (
+            <div key={k} style={{ display: "flex", gap: 10, alignItems: "flex-end" }}>
+              <span style={{ width: 34, height: 34, borderRadius: "50%", flexShrink: 0, background: s(i.avatar) ? `url('${s(i.avatar)}') center/cover` : "linear-gradient(135deg, var(--c-accent), var(--c-accent2))", display: "grid", placeItems: "center", color: "var(--c-accent-ink)", fontSize: 13, fontWeight: 800 }}>
                 {!s(i.avatar) && (s(i.name)[0] || "★")}
               </span>
-              <div>
-                <p style={{ fontSize: 13.5, color: "var(--c-soft)", fontStyle: "italic", lineHeight: 1.5 }}>“{s(i.text)}”</p>
-                <div style={{ fontSize: 12.5, fontWeight: 700, marginTop: 6 }}>{s(i.name)}</div>
+              <div style={{ background: "var(--c-bg)", borderRadius: "16px 16px 16px 4px", padding: "10px 13px", border: "1px solid var(--c-line)", flex: 1 }}>
+                <p style={{ fontSize: 13.5, lineHeight: 1.5 }}>{s(i.text)}</p>
+                <div style={{ fontSize: 11.5, fontWeight: 700, color: "var(--c-soft)", marginTop: 4 }}>{s(i.name)}</div>
               </div>
             </div>
-          ))}
-        </div>
-      );
+          );
+        }
+        if (stars) {
+          return (
+            <div key={k} style={{ textAlign: "center", padding: "14px 12px", background: "var(--c-bg)", borderRadius: 16 }}>
+              <div style={{ fontSize: 15, letterSpacing: 2, marginBottom: 6 }}>⭐⭐⭐⭐⭐</div>
+              <p style={{ fontSize: 13.5, fontStyle: "italic", lineHeight: 1.55, color: "var(--c-soft)" }}>“{s(i.text)}”</p>
+              <div style={{ fontSize: 12.5, fontWeight: 700, marginTop: 8 }}>— {s(i.name)}</div>
+            </div>
+          );
+        }
+        return (
+          <div key={k} style={{ background: "var(--c-bg)", borderRadius: 14, padding: 13, display: "flex", gap: 11 }}>
+            <span style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, background: s(i.avatar) ? `url('${s(i.avatar)}') center/cover` : "linear-gradient(135deg, var(--c-accent), var(--c-accent2))", display: "grid", placeItems: "center", color: "var(--c-accent-ink)", fontSize: 15, fontWeight: 800 }}>
+              {!s(i.avatar) && (s(i.name)[0] || "★")}
+            </span>
+            <div>
+              <p style={{ fontSize: 13.5, color: "var(--c-soft)", fontStyle: "italic", lineHeight: 1.5 }}>“{s(i.text)}”</p>
+              <div style={{ fontSize: 12.5, fontWeight: 700, marginTop: 6 }}>{s(i.name)}</div>
+            </div>
+          </div>
+        );
+      });
+      // Un seul avis : pas de défilement. Plusieurs : rangée qui défile (auto si réglé).
+      if (cards.length < 2) return <div>{cards}</div>;
+      return <AutoScrollRow intervalMs={slideMs}>{cards}</AutoScrollRow>;
     }
     case "faq": {
       const items = arr(d.items).filter((i) => s(i.q));
@@ -864,7 +852,7 @@ export default function CardRenderer({ card, actions }: { card: Card; actions?: 
   const bgOv = typeof custom?.bgOverlay === "number" ? Math.min(100, Math.max(0, custom.bgOverlay)) / 100 : 0.45;
 
   return (
-    <div className={`kc${bgImage ? " kc--bgimg" : ""}`} style={bgImage ? {
+    <div className={`kc${bgImage ? " kc--bgimg" : ""}${custom?.align ? ` kc--al-${custom.align}` : ""}`} style={bgImage ? {
       ...vars,
       backgroundImage: `url('${bgImage}')`,
       backgroundSize: custom?.bgFit === "contain" ? "contain" : "cover",
@@ -874,7 +862,7 @@ export default function CardRenderer({ card, actions }: { card: Card; actions?: 
       {bgImage && <div className="kc-bg-ov" style={{ opacity: bgOv }} />}
       {/* HERO */}
       <div
-        className={`kc-hero${heroAlign === "center" ? " kc-hero--center" : ""}`}
+        className={`kc-hero${heroAlign === "center" ? " kc-hero--center" : ""}${custom?.heroPillFlat ? " kc-hero--flatpills" : ""}`}
         style={{
           ...(heroImg
             ? { backgroundImage: `url('${heroImg}')` }
@@ -882,6 +870,8 @@ export default function CardRenderer({ card, actions }: { card: Card; actions?: 
           ...(typeof custom?.heroHeight === "number" ? { minHeight: custom.heroHeight } : {}),
           ...(custom?.heroPillBg ? { ["--c-herobg" as string]: custom.heroPillBg } : {}),
           ...(custom?.heroPillInk ? { ["--c-heroink" as string]: custom.heroPillInk } : {}),
+          ...(custom?.saveBtnBg ? { ["--c-savebg" as string]: custom.saveBtnBg } : {}),
+          ...(custom?.saveBtnInk ? { ["--c-saveink" as string]: custom.saveBtnInk } : {}),
         }}
       >
         <div className="kc-hero-ov" />
@@ -920,14 +910,17 @@ export default function CardRenderer({ card, actions }: { card: Card; actions?: 
             </div>
           )}
           {(() => {
-            const ph = s(profile?.phone), em = s(profile?.email), ad = s(profile?.address);
-            if (!ph && !em && !ad) return null;
+            const ph = s(profile?.phone), em = s(profile?.email), ad = s(profile?.address), web = s(profile?.website);
+            if (!ph && !em && !ad && !web) return null;
             const dir = ad ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(ad)}` : "";
+            const webHref = web && !/^https?:\/\//i.test(web) ? `https://${web}` : web;
+            const webLabel = web.replace(/^https?:\/\//i, "").replace(/\/$/, "");
             return (
               <div className="kc-hero-contact">
                 {ph && <a className="row" href={`tel:${ph.replace(/\s/g, "")}`}><span className="ic">📞</span><span className="tx">{ph}</span></a>}
                 {em && <a className="row" href={`mailto:${em}`}><span className="ic">✉️</span><span className="tx">{em}</span></a>}
                 {ad && <a className="row" href={dir} target="_blank" rel="noopener"><span className="ic">📍</span><span className="tx">{ad}</span></a>}
+                {web && <a className="row" href={webHref} target="_blank" rel="noopener"><span className="ic">🌐</span><span className="tx">{webLabel}</span></a>}
               </div>
             );
           })()}

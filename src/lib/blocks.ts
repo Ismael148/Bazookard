@@ -35,7 +35,7 @@ export const BLOCK_DEFS: BlockDef[] = [
   // --- Identité ---
   {
     type: "profile", name: "Profil", icon: "👤", category: "Identité",
-    defaults: { name: "Ton Nom", title: "Poste", company: "Entreprise", photo: "", logo: "", bio: "Networking sans contact. Tapez pour échanger nos coordonnées.", phone: "", email: "", address: "", savebtn: true },
+    defaults: { name: "Ton Nom", title: "Poste", company: "Entreprise", photo: "", logo: "", bio: "Networking sans contact. Tapez pour échanger nos coordonnées.", phone: "", email: "", address: "", website: "", savebtn: true },
     fields: [
       { key: "name", label: "Nom complet", type: "text" },
       { key: "title", label: "Poste / Titre", type: "text" },
@@ -46,6 +46,7 @@ export const BLOCK_DEFS: BlockDef[] = [
       { key: "phone", label: "Téléphone", type: "tel", placeholder: "+262 6 92 …" },
       { key: "email", label: "Email", type: "email", placeholder: "contact@monentreprise.re" },
       { key: "address", label: "Adresse physique", type: "text", placeholder: "12 rue du Commerce, Saint-Denis" },
+      { key: "website", label: "Site web (affiché dans le profil)", type: "url", placeholder: "https://monsite.re" },
       { key: "savebtn", label: "Bouton « Enregistrer le contact » (vCard)", type: "toggle" },
     ],
   },
