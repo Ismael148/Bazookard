@@ -2,6 +2,7 @@
 // Galerie Bazookard — grille (ou pleine largeur) + lightbox : un clic sur une
 // image l'affiche en grand par-dessus la carte, avec navigation et fermeture.
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 type Dict = Record<string, unknown>;
 const s = (v: unknown) => (typeof v === "string" ? v : "");
@@ -16,6 +17,8 @@ export default function GalleryBlock({ items, orig, cols, aspect, round, shadow 
 }) {
   const imgs = items.filter((i) => s(i.image));
   const [open, setOpen] = useState<number | null>(null);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     if (open === null) return;
@@ -27,6 +30,13 @@ export default function GalleryBlock({ items, orig, cols, aspect, round, shadow 
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open, imgs.length]);
+
+  useEffect(() => {
+    if (open === null) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, [open]);
 
   const tile = (i: Dict, k: number) => (
     <button key={k} type="button" className="kc-gal-tile" onClick={() => setOpen(k)} aria-label="Agrandir l'image">
@@ -48,7 +58,7 @@ export default function GalleryBlock({ items, orig, cols, aspect, round, shadow 
         {imgs.map(tile)}
       </div>
 
-      {cur && (
+      {cur && mounted && createPortal((
         <div className="kc-lightbox" onClick={() => setOpen(null)} role="dialog" aria-modal="true">
           <button className="kc-lb-x" onClick={() => setOpen(null)} aria-label="Fermer">✕</button>
           {imgs.length > 1 && (
@@ -63,7 +73,7 @@ export default function GalleryBlock({ items, orig, cols, aspect, round, shadow 
           )}
           {imgs.length > 1 && <div className="kc-lb-count">{open! + 1} / {imgs.length}</div>}
         </div>
-      )}
+      ), document.body)}
     </>
   );
 }

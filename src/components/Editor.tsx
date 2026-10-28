@@ -482,7 +482,7 @@ export default function Editor({ initial, perms = FULL, backHref = "/dashboard",
                   <input type="range" min={120} max={260} step={4} value={card.custom?.qrSize ?? 172}
                     onChange={(e) => setCustom({ qrSize: Number(e.target.value) })} style={{ width: "100%", accentColor: "#E8A800" }} />
                 </div>
-                <ColorField label="Couleur principale du QR code" value={card.custom?.qrColor || cardTheme(card.themeIndex).ink}
+                <ColorField label="Couleur de la bordure & de l'ombre du QR" value={card.custom?.qrColor || cardTheme(card.themeIndex).accent}
                   onChange={(v) => setCustom({ qrColor: v })} onReset={() => setCustom({ qrColor: undefined })} />
                 <div>
                   <label className="lbl">Marge au-dessus du QR : {card.custom?.qrMt ?? 0}px</label>
@@ -569,6 +569,15 @@ export default function Editor({ initial, perms = FULL, backHref = "/dashboard",
                       <input type="range" min={0} max={40} value={Number((selBlock.data as Dict).__radius ?? 20)} disabled={!perms.editText}
                         onChange={(e) => updateBlock(selBlock.id, { ...(selBlock.data as Dict), __radius: Number(e.target.value) })}
                         style={{ width: "100%", accentColor: "#E8A800" }} />
+                    </div>
+                    <div style={{ gridColumn: "1/-1" }}>
+                      <ColorField label="Couleur de l'ombre de la vidéo"
+                        value={String((selBlock.data as Dict).__shadowColor ?? "") || "#000000"}
+                        onChange={(v) => updateBlock(selBlock.id, { ...(selBlock.data as Dict), __shadowColor: v })}
+                        onReset={() => updateBlock(selBlock.id, { ...(selBlock.data as Dict), __shadowColor: "" })} />
+                      <p style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 4 }}>
+                        Choisissez « Douce » ou « Forte » ci-dessus, puis une couleur ici (ex. votre couleur d&apos;accent) pour un halo bien visible. ↺ = ombre noire classique.
+                      </p>
                     </div>
                   </div>
                 )}

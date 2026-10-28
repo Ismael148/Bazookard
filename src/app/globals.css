@@ -1694,3 +1694,15 @@ textarea.in { resize: vertical; min-height: 58px; }
   -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-bottom: 2px; }
 .kc-arow::-webkit-scrollbar { display: none; }
 .kc-arow-slide { min-width: 86%; scroll-snap-align: center; flex-shrink: 0; }
+
+/* ═══ FAQ centrée : question + réponse réellement centrées ═════════════ */
+.kc-al-center .kc-acc summary,
+.kc--al-center .kc-acc summary { justify-content: center; text-align: center; }
+.kc-al-center .kc-acc summary .chev,
+.kc--al-center .kc-acc summary .chev { margin-left: 8px; }
+.kc-al-center .kc-acc .body,
+.kc--al-center .kc-acc .body { padding-left: 14px !important; padding-right: 14px; text-align: center; }
+.kc-al-right .kc-acc summary,
+.kc--al-right .kc-acc summary { justify-content: flex-end; text-align: right; }
+.kc-al-right .kc-acc .body,
+.kc--al-right .kc-acc .body { text-align: right; }

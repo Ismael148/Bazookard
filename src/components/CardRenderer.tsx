@@ -18,6 +18,14 @@ import AutoScrollRow from "./AutoScrollRow";
 type Dict = Record<string, unknown>;
 const s = (v: unknown) => (typeof v === "string" ? v : "");
 const arr = (v: unknown) => (Array.isArray(v) ? (v as Dict[]) : []);
+// hex (#rgb/#rrggbb) -> rgba(r,g,b,a) pour les ombres colorées
+function hexA(hex: string, a: number): string {
+  let h = hex.replace("#", "");
+  if (h.length === 3) h = h.split("").map((c) => c + c).join("");
+  if (h.length < 6) return `rgba(0,0,0,${a})`;
+  const n = parseInt(h.slice(0, 6), 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+}
 
 export interface CardActions {
   onSaveContact?: () => void;
@@ -139,9 +147,14 @@ function renderBlock(block: Block, cardId: string, custom?: Card["custom"]): Rea
       const fmt = s(d.format).replace(":", "/") || "16/9";
       const ar = ["16/9", "9/16", "1/1", "4/3", "3/4", "21/9"].includes(fmt) ? fmt : "16/9";
       const vsh = s(d.__shadow);
-      const vShadow = vsh === "forte" ? "0 22px 46px -14px rgba(0,0,0,.55)"
-        : vsh === "douce" ? "0 12px 28px -12px rgba(0,0,0,.32)"
-        : vsh === "aucune" ? "none" : imShadow;
+      const vshc = s(d.__shadowColor);
+      const hasCol = /^#([0-9a-f]{3,8})$/i.test(vshc);
+      const sc = (a: number) => (hasCol ? hexA(vshc, a) : `rgba(0,0,0,${a})`);
+      const vShadow = vsh === "aucune" ? "none"
+        : vsh === "forte" ? `0 18px 52px -6px ${sc(0.72)}, 0 6px 18px -6px ${sc(0.5)}`
+        : vsh === "douce" ? `0 14px 34px -10px ${sc(0.45)}`
+        : hasCol ? `0 16px 44px -8px ${sc(0.6)}`
+        : imShadow;
       const vRadius = typeof d.__radius === "number" ? d.__radius : undefined;
       return embed ? (
         <iframe src={embed} style={{ width: "100%", aspectRatio: ar, border: "none", borderRadius: vRadius !== undefined ? vRadius : "var(--c-r, 20px)", boxShadow: vShadow, display: "block" }} allowFullScreen />
@@ -839,7 +852,7 @@ export default function CardRenderer({ card, actions }: { card: Card; actions?: 
   const heroImg = custom?.noHeroImage ? "" : (s(banner?.image) || s(profile?.photo));
   const name = s(profile?.name) || card.title;
   const chips = [s(profile?.title), s(profile?.company)].filter(Boolean);
-  const heroAlign = custom?.heroAlign || "";
+  const heroAlign = custom?.heroAlign || custom?.align || "";
 
   // Sections = tous les blocs sauf ceux absorbés par le hero, le chatbot et les séparateurs.
   const sections = card.blocks.filter((b) => {

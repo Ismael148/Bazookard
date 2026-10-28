@@ -28,8 +28,7 @@ export default function PublicCard({ slug }: { slug: string }) {
 
   useEffect(() => {
     if (!card) return;
-    // Couleur principale du QR : réglage libre, sinon couleur du texte du thème.
-    const ink = (card.custom?.qrColor && /^#([0-9a-f]{3,8})$/i.test(card.custom.qrColor)) ? card.custom.qrColor : resolveTheme(card).ink;
+    const ink = resolveTheme(card).ink;
     // niveau H : tolère le logo au centre sans casser la lecture du QR
     QRCode.toDataURL(window.location.href, { width: 320, margin: 1, errorCorrectionLevel: "H", color: { dark: ink, light: "#ffffff" } })
       .then(setQr).catch(() => {});
@@ -131,10 +130,11 @@ export default function PublicCard({ slug }: { slug: string }) {
           {qr && !card.custom?.hideQr && (() => {
             const qs = typeof card.custom?.qrSize === "number" ? Math.min(260, Math.max(120, card.custom.qrSize)) : 172;
             const logo = Math.round(qs * 0.26);
+            const qrAccent = (card.custom?.qrColor && /^#([0-9a-f]{3,8})$/i.test(card.custom.qrColor)) ? card.custom.qrColor : t.accent;
             return (
             <div style={{
-              textAlign: "center", background: t.surface, border: `2px solid ${t.accent}`, borderRadius: 22, padding: 20,
-              boxShadow: `0 16px 36px -18px ${t.accent}`,
+              textAlign: "center", background: t.surface, border: `2px solid ${qrAccent}`, borderRadius: 22, padding: 20,
+              boxShadow: `0 16px 40px -14px ${qrAccent}`,
               marginTop: typeof card.custom?.qrMt === "number" ? card.custom.qrMt : 0,
               marginBottom: typeof card.custom?.qrMb === "number" ? card.custom.qrMb : 0,
               maxWidth: qs + 56, marginLeft: "auto", marginRight: "auto",
@@ -142,10 +142,10 @@ export default function PublicCard({ slug }: { slug: string }) {
               <div style={{ position: "relative", width: qs, height: qs, margin: "0 auto" }}>
                 <img src={qr} alt="QR" width={qs} height={qs} style={{ width: qs, height: qs, borderRadius: 14, display: "block" }} />
                 {/* Logo au centre du QR */}
-                <span style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: logo, height: logo, borderRadius: logo * 0.28, background: "#fff", display: "grid", placeItems: "center", boxShadow: "0 2px 8px rgba(0,0,0,.25)", overflow: "hidden" }}>
+                <span style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: logo, height: logo, borderRadius: logo * 0.28, background: "#fff", display: "grid", placeItems: "center", boxShadow: "0 2px 10px rgba(0,0,0,.28)", overflow: "hidden", padding: Math.round(logo * 0.13), boxSizing: "border-box" }}>
                   {qrLogo
-                    ? <span style={{ width: "100%", height: "100%", backgroundImage: `url('${qrLogo}')`, backgroundSize: "cover", backgroundPosition: "center" }} />
-                    : <LogoMark size={Math.round(logo * 0.68)} ink="#17140C" accent={t.accent} />}
+                    ? <span style={{ width: "100%", height: "100%", backgroundImage: `url('${qrLogo}')`, backgroundSize: "contain", backgroundRepeat: "no-repeat", backgroundPosition: "center" }} />
+                    : <LogoMark size={Math.round(logo * 0.64)} ink="#17140C" accent={t.accent} />}
                 </span>
               </div>
               <div style={{ color: t.soft, fontSize: 11.5, marginTop: 10, fontWeight: 600 }}>Scannez pour partager cette carte</div>
@@ -155,9 +155,11 @@ export default function PublicCard({ slug }: { slug: string }) {
           {!card.custom?.hideCredit && (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, color: t.soft, fontSize: 12, marginTop: 16 }}>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                {t.dark && <LogoMark size={18} ink={t.ink} />} Propulsé par <strong style={{ color: t.ink }}>{card.custom?.credit || "Bazookard"}</strong>
+                {t.dark && <LogoMark size={18} ink={t.ink} />} Propulsé par{" "}
+                <a href="https://adamkom.com" target="_blank" rel="noopener" style={{ color: t.ink, fontWeight: 700, textDecoration: "none" }}>
+                  {card.custom?.credit || "Adamkom by JJP"}
+                </a>
               </span>
-              {!(card.custom?.credit) && <span style={{ fontSize: 10.5, opacity: .8 }}>by Adamkom &amp; JJP</span>}
             </div>
           )}
         </div>
