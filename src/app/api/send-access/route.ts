@@ -13,7 +13,7 @@ export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   try {
-    const { to, subject, text } = (await req.json()) as { to?: string; subject?: string; text?: string };
+    const { to, subject, text, html } = (await req.json()) as { to?: string; subject?: string; text?: string; html?: string };
     if (!to || !subject || !text) {
       return NextResponse.json({ ok: false, error: "Champs manquants (destinataire, objet ou message)." }, { status: 400 });
     }
@@ -38,6 +38,7 @@ export async function POST(req: Request) {
       to,
       subject,
       text,
+      ...(html ? { html } : {}),
     });
 
     return NextResponse.json({ ok: true });

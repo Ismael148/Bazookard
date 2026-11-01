@@ -47,6 +47,17 @@ export function listCards(): Card[] {
   return read().sort((a, b) => b.updatedAt - a.updatedAt);
 }
 
+/** Cartes d'un workspace (démo). Repli : carte liée via workspaces.card_id. */
+export function listCardsByWorkspace(workspaceId: string, legacyCardId?: string | null): Card[] {
+  const all = read();
+  const cards = all.filter((c) => c.workspaceId === workspaceId).sort((a, b) => b.updatedAt - a.updatedAt);
+  if (legacyCardId && !cards.some((c) => c.id === legacyCardId)) {
+    const legacy = all.find((c) => c.id === legacyCardId);
+    if (legacy) cards.unshift(legacy);
+  }
+  return cards;
+}
+
 export function getCard(id: string): Card | undefined {
   return read().find((c) => c.id === id);
 }
@@ -64,7 +75,7 @@ export function saveCard(card: Card) {
   write(cards);
 }
 
-export function createCard(title = "Ma carte"): Card {
+export function createCard(title = "Ma carte", workspaceId?: string | null): Card {
   const card: Card = {
     id: uid(),
     slug: slugify(title) + "-" + uid().slice(0, 4),
@@ -72,12 +83,13 @@ export function createCard(title = "Ma carte"): Card {
     themeIndex: 0,
     blocks: [newBlock("profile"), newBlock("contact"), newBlock("social")],
     updatedAt: Date.now(),
+    workspaceId: workspaceId ?? null,
   };
   saveCard(card);
   return card;
 }
 
-export function createCardFromTemplate(tpl: CardTemplate): Card {
+export function createCardFromTemplate(tpl: CardTemplate, workspaceId?: string | null): Card {
   const card: Card = {
     id: uid(),
     slug: slugify(tpl.name) + "-" + uid().slice(0, 4),
@@ -85,6 +97,7 @@ export function createCardFromTemplate(tpl: CardTemplate): Card {
     themeIndex: tpl.themeIndex,
     blocks: templateBlocks(tpl, uid),
     updatedAt: Date.now(),
+    workspaceId: workspaceId ?? null,
   };
   saveCard(card);
   return card;

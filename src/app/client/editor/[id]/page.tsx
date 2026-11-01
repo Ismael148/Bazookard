@@ -2,7 +2,7 @@
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Card } from "@/lib/types";
-import { clientSession, clientSaveCard, clientLogoutDb, defaultPerms, type Permissions } from "@/lib/admin-db";
+import { clientSession, clientSaveCard, clientLogoutDb, findClientCard, defaultPerms, type Permissions } from "@/lib/admin-db";
 import Editor from "@/components/Editor";
 
 export default function ClientEditorPage({ params }: { params: Promise<{ id: string }> }) {
@@ -10,14 +10,16 @@ export default function ClientEditorPage({ params }: { params: Promise<{ id: str
   const router = useRouter();
   const [card, setCard] = useState<Card | null | undefined>(undefined);
   const [perms, setPerms] = useState<Permissions>(defaultPerms());
+  const [backHref, setBackHref] = useState("/client");
 
   useEffect(() => {
     const sess = clientSession();
     if (!sess) { router.replace("/client/login"); return; }
-    const w = sess.workspaces.find((x) => x.cardId === id);
-    if (!w || !w.card) { setCard(null); return; }
-    setPerms(w.permissions);
-    setCard(w.card);
+    const found = findClientCard(sess, id);
+    if (!found) { setCard(null); return; }
+    setPerms(found.ws.permissions);
+    setBackHref(`/client/workspace/${found.ws.id}`);
+    setCard(found.card);
   }, [id, router]);
 
   if (card === undefined) return <div className="admin" style={{ minHeight: "100vh", display: "grid", placeItems: "center", color: "var(--muted)" }}>Chargement…</div>;
@@ -27,7 +29,7 @@ export default function ClientEditorPage({ params }: { params: Promise<{ id: str
     <Editor
       initial={card}
       perms={perms}
-      backHref="/client"
+      backHref={backHref}
       backLabel="Mes cartes"
       onSave={(c) => { void clientSaveCard(c); }}
       onLogout={() => { clientLogoutDb(); router.replace("/client/login"); }}

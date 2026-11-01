@@ -31,6 +31,7 @@ export interface Permissions {
   deleteBlocks?: boolean;  // peut supprimer des sections (annulable en 1 clic)
   publish: boolean;        // peut publier / dépublier
   viewLeads: boolean;      // peut voir leads & analytics
+  manageCards?: boolean;   // peut créer / dupliquer / supprimer des cartes dans ses workspaces
 }
 
 export interface Workspace {
@@ -38,7 +39,7 @@ export interface Workspace {
   name: string;
   slug: string;
   clientId: string | null;
-  cardId?: string | null;   // carte liée (éditable par le client selon permissions)
+  cardId?: string | null;   // carte "principale" (compat) — les cartes réelles = cards.workspace_id
   permissions: Permissions;
   aiKey?: string;           // clé API IA dédiée à ce workspace (BYOK, facultatif)
   createdAt: number;
@@ -59,7 +60,7 @@ const TK = "karte_templates";
 const SK = "karte_admin_session";
 
 const uid = () => Math.random().toString(36).slice(2, 10);
-export const defaultPerms = (): Permissions => ({ editText: true, editStructure: false, deleteBlocks: false, publish: false, viewLeads: true });
+export const defaultPerms = (): Permissions => ({ editText: true, editStructure: false, deleteBlocks: false, publish: false, viewLeads: true, manageCards: true });
 
 function get<T>(key: string, seed: T[]): T[] {
   if (typeof window === "undefined") return [];
@@ -122,8 +123,9 @@ export function ensureWorkspaceCard(w: Workspace): Card {
     const existing = getCard(w.cardId);
     if (existing) return existing;
   }
-  const card = createCard(w.name);
+  const card = createCard(w.name, w.id);
   card.slug = slugify(w.slug || w.name) + "-" + cardUid().slice(0, 3);
+  card.workspaceId = w.id;
   saveCard(card);
   updateWorkspace({ ...w, cardId: card.id });
   return card;

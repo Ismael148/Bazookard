@@ -3,7 +3,7 @@
 // Le compte admin en mode Supabase = le compte connecté (/login).
 import { supabaseEnabled, createClient as sb } from "./supabase/client";
 import * as demo from "./admin-store";
-import { getCard, createCard, saveCard } from "./db";
+import { getCard, createCard, saveCard, cloneCard, deleteCard, listCardsByWorkspace } from "./db";
 import { slugify, uid } from "./store";
 import type { Card } from "./types";
 import type { Client, Workspace, Permissions, PlanKey } from "./admin-store";
@@ -91,6 +91,7 @@ export async function updateWorkspace(w: Workspace): Promise<void> {
 
 export async function deleteWorkspaceById(id: string): Promise<void> {
   if (!supabaseEnabled()) { demo.deleteWorkspace(id); return; }
+  await sb().from("cards").delete().eq("workspace_id", id);
   await sb().from("workspaces").delete().eq("id", id);
 }
 
@@ -100,20 +101,46 @@ export async function ensureWorkspaceCard(w: Workspace): Promise<Card | null> {
     const existing = await getCard(w.cardId);
     if (existing) return existing;
   }
-  const card = await createCard(w.name);
+  const card = await createCard(w.name, w.id);
   if (!card) return null;
   card.slug = slugify(w.slug || w.name) + "-" + uid().slice(0, 3);
+  card.workspaceId = w.id;
   await saveCard(card);
   await updateWorkspace({ ...w, cardId: card.id });
   return card;
 }
 
+/* ---------- Cartes d'un workspace (côté ADMIN) ---------- */
+export async function listWorkspaceCards(w: Workspace): Promise<Card[]> {
+  return listCardsByWorkspace(w.id, w.cardId);
+}
+
+/** Crée une nouvelle carte dans un workspace (admin). */
+export async function createWorkspaceCard(w: Workspace, title = "Nouvelle carte"): Promise<Card | null> {
+  const card = await createCard(title, w.id);
+  if (!card) return null;
+  if (!w.cardId) await updateWorkspace({ ...w, cardId: card.id });
+  return card;
+}
+
+/** Duplique une carte dans le même workspace (admin). */
+export async function duplicateWorkspaceCard(cardId: string, workspaceId: string): Promise<Card | null> {
+  return cloneCard(cardId, workspaceId);
+}
+
+/** Supprime une carte d'un workspace (admin). */
+export async function deleteWorkspaceCard(cardId: string): Promise<void> {
+  await deleteCard(cardId);
+}
+
 /* ================= ESPACE CLIENT (session unifiée) ================= */
-export interface ClientWs {
-  id: string; name: string; slug: string; permissions: Permissions; cardId: string | null;
-  card: Card | null;
+export interface ClientCard extends Card {
   stats: { view: number; tap: number; chat: number; lead: number } | null;
   leads: { name: string; contact: string; ts: number; id?: string }[];
+}
+export interface ClientWs {
+  id: string; name: string; slug: string; permissions: Permissions; cardId: string | null;
+  cards: ClientCard[];
 }
 export interface ClientSession {
   client: { id: string; company: string; email: string; logo: string };
@@ -122,6 +149,33 @@ export interface ClientSession {
 }
 
 const CSK = "karte_client_session_v2";
+
+type RawWs = {
+  id: string; name: string; slug?: string; permissions?: Permissions; cardId?: string | null;
+  cards?: unknown[]; card?: unknown;
+};
+function toClientWs(w: RawWs): ClientWs {
+  const rawCards: Record<string, unknown>[] =
+    Array.isArray(w.cards) ? (w.cards as Record<string, unknown>[])
+    : (w.card ? [w.card as Record<string, unknown>] : []);
+  const cards: ClientCard[] = rawCards.map((cd) => ({
+    id: String(cd.id),
+    slug: String(cd.slug ?? ""),
+    title: String(cd.title ?? "Ma carte"),
+    themeIndex: Number(cd.themeIndex ?? 0),
+    custom: (cd.custom as Card["custom"]) ?? undefined,
+    blocks: Array.isArray(cd.blocks) ? (cd.blocks as Card["blocks"]) : [],
+    updatedAt: Number(cd.updatedAt) || Date.now(),
+    workspaceId: w.id,
+    stats: (cd.stats as ClientCard["stats"]) ?? null,
+    leads: Array.isArray(cd.leads) ? (cd.leads as ClientCard["leads"]) : [],
+  }));
+  return {
+    id: w.id, name: w.name, slug: w.slug ?? "",
+    permissions: w.permissions ?? demo.defaultPerms(),
+    cardId: w.cardId ?? null, cards,
+  };
+}
 
 export async function clientLoginDb(email: string, password: string): Promise<ClientSession | null> {
   if (!supabaseEnabled()) {
@@ -133,7 +187,12 @@ export async function clientLoginDb(email: string, password: string): Promise<Cl
   }
   const { data, error } = await sb().rpc("client_login", { p_email: email, p_password: password });
   if (error || !data) return null;
-  const sess = { ...(data as Omit<ClientSession, "password">), password } as ClientSession;
+  const raw = data as { client: ClientSession["client"]; workspaces?: RawWs[] };
+  const sess: ClientSession = {
+    client: raw.client,
+    password,
+    workspaces: (raw.workspaces ?? []).map(toClientWs),
+  };
   localStorage.setItem(CSK, JSON.stringify(sess));
   return sess;
 }
@@ -142,8 +201,11 @@ async function demoClientSession(c: Client, password: string): Promise<ClientSes
   const wss = demo.clientWorkspaces(c.id);
   const workspaces: ClientWs[] = [];
   for (const w of wss) {
-    const card = w.cardId ? ((await getCard(w.cardId)) ?? null) : null;
-    workspaces.push({ id: w.id, name: w.name, slug: w.slug, permissions: w.permissions, cardId: w.cardId ?? null, card, stats: null, leads: [] });
+    const cards = await listCardsByWorkspace(w.id, w.cardId);
+    workspaces.push({
+      id: w.id, name: w.name, slug: w.slug, permissions: w.permissions, cardId: w.cardId ?? null,
+      cards: cards.map((card) => ({ ...card, stats: null, leads: [] })),
+    });
   }
   return { client: { id: c.id, company: c.company, email: c.email, logo: c.logo ?? "" }, password, workspaces };
 }
@@ -156,6 +218,88 @@ export function clientSession(): ClientSession | null {
 export function clientLogoutDb() {
   if (typeof window !== "undefined") localStorage.removeItem(CSK);
   demo.clientLogout();
+}
+
+/** Toutes les cartes du client, à plat (avec le workspace parent). */
+export function allClientCards(sess: ClientSession): { ws: ClientWs; card: ClientCard }[] {
+  return sess.workspaces.flatMap((w) => w.cards.map((card) => ({ ws: w, card })));
+}
+
+/** Recherche une carte (et son workspace) dans la session par id. */
+export function findClientCard(sess: ClientSession, cardId: string): { ws: ClientWs; card: ClientCard } | null {
+  for (const w of sess.workspaces) {
+    const card = w.cards.find((c) => c.id === cardId);
+    if (card) return { ws: w, card };
+  }
+  return null;
+}
+
+/** Quota : nombre total de cartes du client vs. plafond de son abonnement. */
+export function clientCardUsage(sess: ClientSession): number {
+  return sess.workspaces.reduce((a, w) => a + w.cards.length, 0);
+}
+
+type CardActionResult = { ok: boolean; error?: string; quota?: number; id?: string };
+
+/** Création d'une carte par le client (quota + permission vérifiés). */
+export async function clientCreateCard(workspaceId: string, title: string): Promise<CardActionResult> {
+  const sess = clientSession();
+  if (!sess) return { ok: false, error: "auth" };
+  if (supabaseEnabled()) {
+    const { data, error } = await sb().rpc("client_create_card", {
+      p_email: sess.client.email, p_password: sess.password, p_workspace: workspaceId, p_title: title,
+    });
+    if (error || !data) return { ok: false, error: error?.message || "rpc" };
+    return data as CardActionResult;
+  }
+  // démo : quota via plan du client
+  const c = demo.listClients().find((x) => x.id === sess.client.id);
+  const quota = demo.planQuota(c?.plan);
+  if (clientCardUsage(sess) >= quota) return { ok: false, error: "quota", quota };
+  const ws = demo.listWorkspaces().find((w) => w.id === workspaceId);
+  if (ws && ws.permissions.manageCards === false) return { ok: false, error: "perm" };
+  const card = await createCard(title || "Nouvelle carte", workspaceId);
+  return card ? { ok: true, id: card.id } : { ok: false, error: "create" };
+}
+
+/** Duplication d'une carte par le client (quota + permission vérifiés). */
+export async function clientDuplicateCard(cardId: string): Promise<CardActionResult> {
+  const sess = clientSession();
+  if (!sess) return { ok: false, error: "auth" };
+  if (supabaseEnabled()) {
+    const { data, error } = await sb().rpc("client_duplicate_card", {
+      p_email: sess.client.email, p_password: sess.password, p_card: cardId,
+    });
+    if (error || !data) return { ok: false, error: error?.message || "rpc" };
+    return data as CardActionResult;
+  }
+  const found = findClientCard(sess, cardId);
+  if (!found) return { ok: false, error: "card" };
+  const c = demo.listClients().find((x) => x.id === sess.client.id);
+  const quota = demo.planQuota(c?.plan);
+  if (clientCardUsage(sess) >= quota) return { ok: false, error: "quota", quota };
+  if (found.ws.permissions.manageCards === false) return { ok: false, error: "perm" };
+  const card = await cloneCard(cardId, found.ws.id);
+  return card ? { ok: true, id: card.id } : { ok: false, error: "create" };
+}
+
+/** Suppression d'une carte par le client (garde au moins 1 carte par workspace). */
+export async function clientDeleteCard(cardId: string): Promise<CardActionResult> {
+  const sess = clientSession();
+  if (!sess) return { ok: false, error: "auth" };
+  if (supabaseEnabled()) {
+    const { data, error } = await sb().rpc("client_delete_card", {
+      p_email: sess.client.email, p_password: sess.password, p_card: cardId,
+    });
+    if (error || !data) return { ok: false, error: error?.message || "rpc" };
+    return data as CardActionResult;
+  }
+  const found = findClientCard(sess, cardId);
+  if (!found) return { ok: false, error: "card" };
+  if (found.ws.permissions.manageCards === false) return { ok: false, error: "perm" };
+  if (found.ws.cards.length <= 1) return { ok: false, error: "last" };
+  await deleteCard(cardId);
+  return { ok: true };
 }
 
 /** Sauvegarde d'une carte par le client (RPC sécurisée en mode Supabase). */
@@ -172,7 +316,10 @@ export async function clientSaveCard(card: Card): Promise<boolean> {
     await saveCard(card);
   }
   // met à jour la copie locale de la session
-  sess.workspaces = sess.workspaces.map((w) => (w.cardId === card.id ? { ...w, card } : w));
+  sess.workspaces = sess.workspaces.map((w) => ({
+    ...w,
+    cards: w.cards.map((c) => (c.id === card.id ? { ...c, ...card } : c)),
+  }));
   localStorage.setItem(CSK, JSON.stringify(sess));
   return true;
 }
@@ -198,7 +345,7 @@ export async function clientDailyStats(days = 30): Promise<{ date: string; view:
     } catch { return Object.values(skel); }
   }
   const { getDailyStats } = await import("./tracking");
-  const ids = sess.workspaces.map((w) => w.cardId).filter(Boolean) as string[];
+  const ids = allClientCards(sess).map((x) => x.card.id);
   return getDailyStats(ids, days);
 }
 
@@ -213,7 +360,6 @@ export async function clientDeleteLead(cardId: string, lead: { id?: string; ts: 
     });
     if (error || data !== true) return false;
   } else {
-    // mode démo : retire de la liste locale (par horodatage)
     try {
       const key = `karte_leads_${cardId}`;
       const list = JSON.parse(localStorage.getItem(key) || "[]") as { ts: number }[];
@@ -221,9 +367,12 @@ export async function clientDeleteLead(cardId: string, lead: { id?: string; ts: 
     } catch {}
   }
   // met à jour la copie locale de la session
-  sess.workspaces = sess.workspaces.map((w) =>
-    w.cardId === cardId ? { ...w, leads: (w.leads ?? []).filter((l) => (lead.id ? l.id !== lead.id : l.ts !== lead.ts)) } : w
-  );
+  sess.workspaces = sess.workspaces.map((w) => ({
+    ...w,
+    cards: w.cards.map((c) =>
+      c.id === cardId ? { ...c, leads: (c.leads ?? []).filter((l) => (lead.id ? l.id !== lead.id : l.ts !== lead.ts)) } : c
+    ),
+  }));
   try { localStorage.setItem(CSK, JSON.stringify(sess)); } catch {}
   return true;
 }

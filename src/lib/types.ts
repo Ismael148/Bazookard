@@ -73,6 +73,7 @@ export interface Card {
   custom?: CardCustom;
   blocks: Block[];
   updatedAt: number;
+  workspaceId?: string | null;   // workspace auquel la carte appartient (multi-cartes)
 }
 
 // Palettes (dégradés) — index référencé par card.themeIndex

@@ -8,6 +8,12 @@ import {
   listClients, createClientAccount, updateClientAccount, deleteClientAccount, listWorkspaces,
   PLANS, planQuota, type Client, type Workspace, type PlanKey,
 } from "@/lib/admin-db";
+import { getEmailTemplate, saveEmailTemplate, fillTemplate, toHtml } from "@/lib/emailTemplate";
+
+function loginUrl() {
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  return `${origin}/client/login`;
+}
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>([]);
@@ -75,15 +81,15 @@ export default function ClientsPage() {
                     </select>
                   </td>
                   <td>
-                    <span className="a-badge a-badge-soft" style={countWs(c.id) >= planQuota(c.plan) ? { background: "#FDECEC", color: "#B3261E" } : undefined}>
-                      {countWs(c.id)} / {planQuota(c.plan)}
+                    <span className="a-badge a-badge-soft">
+                      {countWs(c.id)} workspace(s) · {planQuota(c.plan)} carte(s) max
                     </span>
                   </td>
                   <td style={{ color: "var(--muted)", fontSize: 13 }}>{new Date(c.createdAt).toLocaleDateString("fr-FR")}</td>
                   <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
                     <button className="a-btn a-btn-sm a-btn-primary" style={{ marginRight: 6 }}
-                      onClick={() => setMailFor(c)} title="Modifier puis envoyer les accès par email">
-                      <Icon name="export" size={14} /> Envoyer les accès
+                      onClick={() => setMailFor(c)} title="Voir, modifier puis renvoyer les accès par email">
+                      <Icon name="export" size={14} /> Renvoyer les accès
                     </button>
                     <button className="a-btn a-btn-sm a-btn-danger" onClick={() => setToDelete(c)} title="Supprimer ce client">
                       <Icon name="trash" size={15} />
@@ -101,7 +107,7 @@ export default function ClientsPage() {
         </div>
       </div>
 
-      {open && <ClientModal onClose={() => setOpen(false)} onCreated={() => { refresh(); notify("Client créé — identifiants prêts à envoyer"); }} />}
+      {open && <ClientModal onClose={() => setOpen(false)} onCreated={(msg) => { refresh(); notify(msg); }} />}
       {mailFor && <AccessMailModal client={mailFor} onClose={() => setMailFor(null)} onSent={() => notify("Accès envoyés par email ✓")} />}
       {toDelete && (
         <ConfirmModal
@@ -119,19 +125,49 @@ export default function ClientsPage() {
   );
 }
 
-function ClientModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
+async function sendAccessEmail(client: { company: string; email: string; password: string }): Promise<{ ok: boolean; error?: string }> {
+  const tpl = getEmailTemplate();
+  const vars = { company: client.company, email: client.email, password: client.password, loginUrl: loginUrl() };
+  const subject = fillTemplate(tpl.subject, vars);
+  const text = fillTemplate(tpl.body, vars);
+  try {
+    const res = await fetch("/api/send-access", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ to: client.email, subject, text, html: toHtml(text) }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) return { ok: false, error: data.error || `Erreur ${res.status}` };
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Échec de l'envoi" };
+  }
+}
+
+function ClientModal({ onClose, onCreated }: { onClose: () => void; onCreated: (msg: string) => void }) {
   const [company, setCompany] = useState("");
   const [email, setEmail] = useState("");
   const [pwd, setPwd] = useState(genPwd());
   const [logo, setLogo] = useState("");
   const [plan, setPlan] = useState<PlanKey>("pro");
+  const [autoSend, setAutoSend] = useState(true);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => { setAutoSend(getEmailTemplate().autoSend); }, []);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!company || !email) return;
-    await createClientAccount(company, email, pwd, logo, plan);
-    onCreated();
-    onClose();
+    if (!company || !email || busy) return;
+    setBusy(true);
+    try {
+      await createClientAccount(company, email, pwd, logo, plan);
+      if (autoSend) {
+        const r = await sendAccessEmail({ company, email, password: pwd });
+        onCreated(r.ok ? "Client créé — accès envoyés par email ✓" : `Client créé, mais l'email n'est pas parti : ${r.error}. Utilisez « Renvoyer les accès ».`);
+      } else {
+        onCreated("Client créé — identifiants prêts à envoyer");
+      }
+      onClose();
+    } finally { setBusy(false); }
   }
 
   return (
@@ -158,10 +194,16 @@ function ClientModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
               <button type="button" className="a-btn a-btn-sm" onClick={() => setPwd(genPwd())} title="Régénérer"><Icon name="settings" size={15} /></button>
             </div>
           </div>
-          <div style={{ background: "#f6f7fb", borderRadius: 10, padding: "10px 12px", fontSize: 12.5, color: "var(--ink2)" }}>
-            Le client recevra ces identifiants pour accéder à son propre back-office.
-          </div>
-          <button className="a-btn a-btn-primary" style={{ justifyContent: "center" }} type="submit">Créer l'accès</button>
+          <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", background: "#f6f7fb", borderRadius: 10, padding: "11px 12px" }}>
+            <button type="button" className={`a-switch ${autoSend ? "on" : ""}`} onClick={() => setAutoSend(!autoSend)} aria-label="Envoyer les accès" />
+            <span style={{ fontSize: 13, color: "var(--ink2)", fontWeight: 600 }}>
+              Envoyer les accès par email immédiatement
+              <span style={{ display: "block", fontWeight: 400, color: "var(--muted)", fontSize: 12 }}>Modèle modifiable dans Paramètres</span>
+            </span>
+          </label>
+          <button className="a-btn a-btn-primary" style={{ justifyContent: "center" }} type="submit" disabled={busy}>
+            {busy ? (autoSend ? "Création & envoi…" : "Création…") : "Créer l'accès"}
+          </button>
         </form>
       </div>
     </div>
@@ -169,13 +211,11 @@ function ClientModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
 }
 
 function AccessMailModal({ client, onClose, onSent }: { client: Client; onClose: () => void; onSent: () => void }) {
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
-  const loginUrl = `${origin}/client/login`;
+  const vars = { company: client.company, email: client.email, password: client.password, loginUrl: loginUrl() };
+  const tpl = getEmailTemplate();
   const [to, setTo] = useState(client.email);
-  const [subject, setSubject] = useState(`Vos accès Bazookard \u2014 ${client.company}`);
-  const [body, setBody] = useState(
-    `Bonjour,\n\nVotre espace Bazookard est prêt ! Vous pouvez modifier votre carte NFC à tout moment :\n\nLien : ${loginUrl}\nEmail : ${client.email}\nMot de passe : ${client.password}\n\nÀ très vite,\nL'équipe Bazookard — by Adamkom & JJP`
-  );
+  const [subject, setSubject] = useState(fillTemplate(tpl.subject, vars));
+  const [body, setBody] = useState(fillTemplate(tpl.body, vars));
   const [state, setState] = useState<"idle" | "sending" | "ok" | "error">("idle");
   const [error, setError] = useState("");
 
@@ -185,7 +225,7 @@ function AccessMailModal({ client, onClose, onSent }: { client: Client; onClose:
       const res = await fetch("/api/send-access", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ to, subject, text: body }),
+        body: JSON.stringify({ to, subject, text: body, html: toHtml(body) }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) throw new Error(data.error || `Erreur ${res.status}`);
@@ -196,6 +236,18 @@ function AccessMailModal({ client, onClose, onSent }: { client: Client; onClose:
       setState("error");
       setError(e instanceof Error ? e.message : "Échec de l'envoi");
     }
+  }
+
+  function saveAsTemplate() {
+    // Reconvertit les valeurs de CE client en variables, pour en faire un modèle réutilisable.
+    const toVar = (s: string) => s
+      .split(client.password).join("{password}")
+      .split(client.email).join("{email}")
+      .split(client.company).join("{company}")
+      .split(vars.loginUrl).join("{loginUrl}");
+    saveEmailTemplate({ ...tpl, subject: toVar(subject), body: toVar(body) });
+    setState("ok");
+    setTimeout(() => setState("idle"), 1200);
   }
 
   const mailtoHref = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
@@ -224,12 +276,17 @@ function AccessMailModal({ client, onClose, onSent }: { client: Client; onClose:
               <a href={mailtoHref} style={{ color: "#B3261E", fontWeight: 700 }}>ouvrir dans ma messagerie</a>.
             </div>
           )}
-          <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", alignItems: "center", flexWrap: "wrap" }}>
-            <a className="a-btn a-btn-sm" href={mailtoHref} title="Ouvrir le brouillon dans votre logiciel de messagerie">Ouvrir dans ma messagerie</a>
-            <button className="a-btn a-btn-primary" disabled={state === "sending" || !to} onClick={send}
-              style={{ minWidth: 160, justifyContent: "center" }}>
-              {state === "sending" ? "Envoi…" : state === "ok" ? "✓ Envoyé" : "📤 Envoyer l'email"}
+          <div style={{ display: "flex", gap: 10, justifyContent: "space-between", alignItems: "center", flexWrap: "wrap" }}>
+            <button type="button" className="a-btn a-btn-sm" onClick={saveAsTemplate} title="Enregistrer ce texte comme modèle par défaut">
+              <Icon name="check" size={14} /> Définir comme modèle
             </button>
+            <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+              <a className="a-btn a-btn-sm" href={mailtoHref} title="Ouvrir le brouillon dans votre logiciel de messagerie">Ma messagerie</a>
+              <button className="a-btn a-btn-primary" disabled={state === "sending" || !to} onClick={send}
+                style={{ minWidth: 160, justifyContent: "center" }}>
+                {state === "sending" ? "Envoi…" : state === "ok" ? "✓ Envoyé" : "📤 Envoyer l'email"}
+              </button>
+            </div>
           </div>
         </div>
       </div>

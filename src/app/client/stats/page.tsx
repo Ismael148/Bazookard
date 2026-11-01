@@ -1,14 +1,15 @@
 "use client";
-// Espace client — Performance : rapports graphiques de vos cartes.
+// Espace client — Performance : rapports graphiques de toutes vos cartes.
 // Données réelles, rafraîchies automatiquement toutes les 15 s (temps réel).
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { clientSession, clientLoginDb, clientDailyStats, type ClientSession } from "@/lib/admin-db";
+import { clientSession, clientLoginDb, clientDailyStats, allClientCards, type ClientSession } from "@/lib/admin-db";
 import { AreaChart, HBarChart, Donut } from "@/components/StatsChart";
 import { getStats, type DayStats, type Stats } from "@/lib/tracking";
 
 const RANGES = [7, 14, 30, 90];
 const REFRESH_MS = 15000;
+const ZERO: Stats = { view: 0, tap: 0, chat: 0, lead: 0 };
 
 export default function ClientStats() {
   const [sess, setSess] = useState<ClientSession | null>(null);
@@ -29,14 +30,11 @@ export default function ClientStats() {
   useEffect(() => {
     if (!sess) return;
     let stop = false;
+    const cards = allClientCards(sess).filter((x) => x.ws.permissions.viewLeads);
     async function refresh() {
       const [d, entries] = await Promise.all([
         clientDailyStats(days),
-        Promise.all(
-          sess!.workspaces
-            .filter((w) => w.cardId)
-            .map(async (w) => [w.cardId as string, await getStats(w.cardId as string)] as const)
-        ),
+        Promise.all(cards.map(async ({ card }) => [card.id, await getStats(card.id)] as const)),
       ]);
       if (stop) return;
       setDaily(d);
@@ -49,15 +47,12 @@ export default function ClientStats() {
   }, [sess, days]);
 
   if (!sess) return null;
-  const visible = sess.workspaces.filter((w) => w.permissions.viewLeads);
-  const wsStats = (w: ClientSession["workspaces"][number]): Stats => {
-    if (w.cardId && live[w.cardId]) return live[w.cardId];
-    return w.stats ?? { view: 0, tap: 0, chat: 0, lead: 0 };
-  };
-  const totals = visible.reduce((a, w) => {
-    const st = wsStats(w);
+  const cards = allClientCards(sess).filter((x) => x.ws.permissions.viewLeads);
+  const statOf = (cardId: string, fallback: Stats | null): Stats => live[cardId] ?? fallback ?? ZERO;
+  const totals = cards.reduce((a, { card }) => {
+    const st = statOf(card.id, card.stats);
     return { view: a.view + st.view, tap: a.tap + st.tap, chat: a.chat + st.chat, lead: a.lead + st.lead };
-  }, { view: 0, tap: 0, chat: 0, lead: 0 });
+  }, { ...ZERO });
   const periodViews = daily.reduce((a, d) => a + d.view, 0);
   const conv = totals.view > 0 ? Math.round(((totals.lead + totals.tap) / totals.view) * 100) : 0;
 
@@ -107,7 +102,7 @@ export default function ClientStats() {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))", gap: 18 }}>
           <div className="a-card fade-up" style={{ padding: 22 }}>
             <div style={{ fontWeight: 700, marginBottom: 14 }}>Vues par carte</div>
-            <HBarChart rows={visible.map((w) => ({ label: w.name, value: wsStats(w).view }))} />
+            <HBarChart rows={cards.map(({ card }) => ({ label: card.title, value: statOf(card.id, card.stats).view }))} />
           </div>
           <div className="a-card fade-up" style={{ padding: 22 }}>
             <div style={{ fontWeight: 700, marginBottom: 14 }}>Répartition des interactions</div>
@@ -118,7 +113,7 @@ export default function ClientStats() {
             ]} />
           </div>
         </div>
-        {visible.length === 0 && (
+        {cards.length === 0 && (
           <div className="a-card" style={{ padding: 36, textAlign: "center", color: "var(--muted)" }}>
             Les statistiques ne sont pas activées sur votre compte. Contactez Adamkom by JJP.
           </div>

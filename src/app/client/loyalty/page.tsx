@@ -35,20 +35,21 @@ export default function ClientLoyalty() {
 
   const programs: Program[] = [];
   for (const w of sess.workspaces) {
-    const blocks = w.card?.blocks ?? [];
-    for (const b of blocks) {
-      if (b.type !== "loyalty") continue;
-      const d = b.data as Dict;
-      programs.push({
-        cardId: w.cardId,
-        wsName: w.name,
-        editable: w.permissions.editText,
-        title: s(d.title) || "Carte de fidélité",
-        reward: s(d.reward),
-        stamps: s(d.stamps) || "8",
-        pin: s(d.pin),
-        note: s(d.note),
-      });
+    for (const card of w.cards) {
+      for (const b of card.blocks) {
+        if (b.type !== "loyalty") continue;
+        const d = b.data as Dict;
+        programs.push({
+          cardId: card.id,
+          wsName: w.cards.length > 1 ? `${w.name} · ${card.title}` : w.name,
+          editable: w.permissions.editText,
+          title: s(d.title) || "Carte de fidélité",
+          reward: s(d.reward),
+          stamps: s(d.stamps) || "8",
+          pin: s(d.pin),
+          note: s(d.note),
+        });
+      }
     }
   }
 

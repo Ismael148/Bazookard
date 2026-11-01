@@ -24,7 +24,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     setCompany(s.client.company);
     setReady(true);
     // Total des messages/contacts reçus (toutes cartes) = notification si nouveaux
-    const total = s.workspaces.reduce((a, w) => a + (w.stats?.lead ?? 0), 0);
+    const total = s.workspaces.reduce((a, w) => a + w.cards.reduce((b, c) => b + (c.stats?.lead ?? 0), 0), 0);
     let seen = 0;
     try { seen = Number(localStorage.getItem(SEEN_KEY) || "0"); } catch {}
     if (pathname === "/client/leads") {

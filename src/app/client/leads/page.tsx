@@ -1,10 +1,10 @@
 "use client";
-// Espace client — Contacts & messages : tout ce que vos visiteurs vous laissent.
+// Espace client — Contacts & messages : tout ce que vos visiteurs vous laissent (toutes cartes).
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Icon from "@/components/Icon";
 import ConfirmModal from "@/components/ConfirmModal";
-import { clientSession, clientLoginDb, clientDeleteLead, type ClientSession, type ClientWs } from "@/lib/admin-db";
+import { clientSession, clientLoginDb, clientDeleteLead, allClientCards, type ClientSession } from "@/lib/admin-db";
 import { getLeads, type Lead } from "@/lib/tracking";
 
 export default function ClientLeads() {
@@ -22,9 +22,9 @@ export default function ClientLeads() {
     const cur = fresh ?? s;
     if (fresh) setSess(fresh);
     const ld: Record<string, Lead[]> = {};
-    for (const w of cur.workspaces) {
-      if (!w.cardId || !w.permissions.viewLeads || w.leads?.length) continue;
-      ld[w.cardId] = await getLeads(w.cardId);
+    for (const { ws, card } of allClientCards(cur)) {
+      if (!ws.permissions.viewLeads || card.leads?.length) continue;
+      ld[card.id] = await getLeads(card.id);
     }
     setExtra(ld);
   }
@@ -32,17 +32,20 @@ export default function ClientLeads() {
   useEffect(() => { void load(); }, [router]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!sess) return null;
-  const leadsOf = (w: ClientWs): Lead[] => (w.leads?.length ? w.leads : (w.cardId ? extra[w.cardId] ?? [] : []));
-  const groups = sess.workspaces
-    .filter((w) => w.permissions.viewLeads)
-    .map((w) => ({
-      ws: w.name,
-      cardId: w.cardId,
-      items: leadsOf(w).filter((l) => {
-        const s = q.trim().toLowerCase();
-        return !s || l.name.toLowerCase().includes(s) || l.contact.toLowerCase().includes(s);
-      }),
-    }))
+  const groups = allClientCards(sess)
+    .filter((x) => x.ws.permissions.viewLeads)
+    .map(({ ws, card }) => {
+      const base: Lead[] = card.leads?.length ? (card.leads as Lead[]) : (extra[card.id] ?? []);
+      return {
+        key: card.id,
+        title: ws.cards.length > 1 ? `${ws.name} · ${card.title}` : ws.name,
+        cardId: card.id,
+        items: base.filter((l) => {
+          const s = q.trim().toLowerCase();
+          return !s || l.name.toLowerCase().includes(s) || l.contact.toLowerCase().includes(s);
+        }),
+      };
+    })
     .filter((g) => g.items.length);
   const total = groups.reduce((a, g) => a + g.items.length, 0);
 
@@ -77,8 +80,8 @@ export default function ClientLeads() {
 
       <div style={{ padding: 28, display: "flex", flexDirection: "column", gap: 16 }}>
         {groups.map((g) => (
-          <div key={g.ws} className="a-card fade-up" style={{ padding: 20 }}>
-            <div style={{ fontSize: 12, fontWeight: 800, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 10 }}>{g.ws} · {g.items.length}</div>
+          <div key={g.key} className="a-card fade-up" style={{ padding: 20 }}>
+            <div style={{ fontSize: 12, fontWeight: 800, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 10 }}>{g.title} · {g.items.length}</div>
             {g.items.map((l, i) => {
               const href = linkFor(l.contact);
               return (
@@ -92,12 +95,10 @@ export default function ClientLeads() {
                   </div>
                   <span style={{ color: "var(--muted)", fontSize: 12, flexShrink: 0 }}>{new Date(l.ts).toLocaleDateString("fr-FR")}</span>
                   {href && <a href={href} className="a-btn a-btn-sm a-btn-primary" style={{ flexShrink: 0 }}>Répondre</a>}
-                  {g.cardId && (
-                    <button className="a-btn a-btn-sm a-btn-danger" style={{ flexShrink: 0 }} title="Supprimer ce message"
-                      onClick={() => setToDelete({ cardId: g.cardId as string, lead: l })}>
-                      <Icon name="trash" size={15} />
-                    </button>
-                  )}
+                  <button className="a-btn a-btn-sm a-btn-danger" style={{ flexShrink: 0 }} title="Supprimer ce message"
+                    onClick={() => setToDelete({ cardId: g.cardId, lead: l })}>
+                    <Icon name="trash" size={15} />
+                  </button>
                 </div>
               );
             })}
@@ -105,7 +106,7 @@ export default function ClientLeads() {
         ))}
         {groups.length === 0 && (
           <div className="a-card" style={{ padding: 40, textAlign: "center", color: "var(--muted)" }}>
-            {q ? "Aucun contact ne correspond à cette recherche." : "Aucun contact pour le moment — partagez votre carte !"}
+            {q ? "Aucun contact ne correspond à cette recherche." : "Aucun contact pour le moment — partagez vos cartes !"}
           </div>
         )}
       </div>
@@ -119,7 +120,6 @@ export default function ClientLeads() {
             setToDelete(null);
             void clientDeleteLead(cardId, lead).then((ok) => {
               if (ok) {
-                // retire aussi de la liste locale « extra » (cas lecture directe)
                 setExtra((prev) => ({ ...prev, [cardId]: (prev[cardId] ?? []).filter((x) => (lead.id ? x.id !== lead.id : x.ts !== lead.ts)) }));
                 void load();
               }
