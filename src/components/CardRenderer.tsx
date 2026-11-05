@@ -8,11 +8,11 @@ import SocialIcon, { Glyph } from "./SocialIcon";
 import MenuBlock from "./MenuBlock";
 import AroundBlock from "./AroundBlock";
 import WelcomeBlock from "./WelcomeBlock";
+import GalleryBlock from "./GalleryBlock";
 import SubscribeBlock from "./SubscribeBlock";
 import ReservationBlock from "./ReservationBlock";
 import FormBlock from "./FormBlock";
 import CarouselBlock from "./CarouselBlock";
-import GalleryBlock from "./GalleryBlock";
 import AutoScrollRow from "./AutoScrollRow";
 
 type Dict = Record<string, unknown>;
@@ -396,21 +396,28 @@ function renderBlock(block: Block, cardId: string, custom?: Card["custom"]): Rea
       const items = arr(d.items).filter((i) => s(i.day));
       if (!items.length) return null;
       const DAYS = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
-      const todayName = DAYS[new Date().getDay()];
+      // Heure de La Réunion (UTC+4, sans changement d'heure) — ouvert/fermé automatique
+      const reunion = new Date(Date.now() + 4 * 3600 * 1000);
+      const todayName = DAYS[reunion.getUTCDay()];
+      const nowMin = reunion.getUTCHours() * 60 + reunion.getUTCMinutes();
       // Statut ouvert/fermé (best effort sur le jour courant)
       let status: "open" | "closed" | null = null;
       const today = items.find((i) => s(i.day).toLowerCase().startsWith(todayName.slice(0, 4)));
       if (today) {
-        const m = s(today.hours).match(/(\d{1,2})[h:](\d{2})?\s*[-–]\s*(\d{1,2})[h:](\d{2})?/);
-        if (m) {
-          const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
-          const from = parseInt(m[1]) * 60 + parseInt(m[2] || "0");
-          const to = parseInt(m[3]) * 60 + parseInt(m[4] || "0");
-          status = nowMin >= from && nowMin < to ? "open" : "closed";
+        // gère aussi deux créneaux (ex : 09:00-12:00 / 14:00-18:00)
+        const ranges = [...s(today.hours).matchAll(/(\d{1,2})[h:](\d{2})?\s*[-–]\s*(\d{1,2})[h:](\d{2})?/g)];
+        if (ranges.length) {
+          status = "closed";
+          for (const m of ranges) {
+            const from = parseInt(m[1]) * 60 + parseInt(m[2] || "0");
+            const to = parseInt(m[3]) * 60 + parseInt(m[4] || "0");
+            if (nowMin >= from && nowMin < to) { status = "open"; break; }
+          }
         } else if (/ferm/i.test(s(today.hours))) status = "closed";
       }
       const hstyle = s(d.style);
-      const badge = status && (
+      const hideStatus = d.hideStatus === true;
+      const badge = !hideStatus && status && (
         <span className={status === "open" ? "kc-h-badge open" : "kc-h-badge"}>
           {status === "open" ? "● Ouvert" : "● Fermé"}
         </span>
@@ -543,6 +550,31 @@ function renderBlock(block: Block, cardId: string, custom?: Card["custom"]): Rea
               })}
             </div>
           </>
+        );
+      }
+      if (hstyle === "photo") {
+        const ovNum = typeof d.overlay === "number" ? d.overlay : parseFloat(s(d.overlay));
+        const ov = isFinite(ovNum) ? Math.min(100, Math.max(0, ovNum)) / 100 : 0.55;
+        return (
+          <div className="kc-h-photo" style={{ backgroundImage: s(d.image) ? `url('${s(d.image)}')` : "linear-gradient(135deg, var(--c-accent), var(--c-accent2))" }}>
+            <div className="ov" style={{ opacity: ov }} />
+            <div className="ct">
+              <div className="hd">
+                <span className="ttl">🕒 {s(d.title) || "Horaires"}</span>
+                {badge}
+              </div>
+              {items.map((i, k) => {
+                const isToday = s(i.day).toLowerCase().startsWith(todayName.slice(0, 4));
+                const closed = /ferm/i.test(s(i.hours));
+                return (
+                  <div key={k} className={`row${isToday ? " today" : ""}`}>
+                    <span className="day">{isToday && <span className="dot" />}{s(i.day)}</span>
+                    <span className="hrs">{closed ? "Fermé" : animDigits(s(i.hours) || "—", k)}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         );
       }
       // Style classique (liste) — avec chiffres animés

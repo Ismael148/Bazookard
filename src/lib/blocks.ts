@@ -417,6 +417,7 @@ export const BLOCK_DEFS: BlockDef[] = [
     type: "hours", name: "Horaires", icon: "🕒", category: "Contact",
     defaults: {
       title: "Horaires d'ouverture",
+      hideStatus: false,
       items: [
         { day: "Lundi", hours: "09:00 - 18:00" },
         { day: "Mardi", hours: "09:00 - 18:00" },
@@ -432,12 +433,16 @@ export const BLOCK_DEFS: BlockDef[] = [
       { key: "style", label: "Style d'affichage", type: "select", options: [
         ["cards", "Cartes à icônes (moderne) ✨"],
         ["glow", "Néon / glow (fun) 🌈"],
+        ["photo", "Photo d'ambiance (fun) 📸"],
         ["digital", "Digital LED (animé)"],
         ["pills", "Capsules premium"],
         ["timeline", "Timeline élégante"],
         ["minimal", "Minimal chic"],
         ["", "Classique (liste)"],
       ] },
+      { key: "image", label: "Image d'ambiance (style Photo)", type: "image" },
+      { key: "overlay", label: "Voile sur l'image (style Photo, 0–100)", type: "text", placeholder: "55" },
+      { key: "hideStatus", label: "Masquer la mention « Ouvert / Fermé »", type: "toggle" },
       {
         key: "items", label: "Jours", type: "repeater", addLabel: "+ Ajouter un jour",
         item: [
